@@ -18,10 +18,12 @@ hoặc tham chiếu đường dẫn — không đoán layout từ trí nhớ phi
 |---|---|
 | Quyết định product & kiến trúc | `lab-docs/README.md`, `lab-docs/decisions/decision-ledger.md` |
 | Kiến trúc hệ thống | `lab-docs/architecture/system-overview.md` |
+| Kiến trúc backend (layering, test, deploy) | `lab-docs/architecture/backend.md` |
 | Frontend & UX | `lab-docs/architecture/frontend.md` |
 | IAM | `lab-docs/architecture/iam.md` |
 | Local dev & secrets | `lab-docs/architecture/local-development.md` |
 | Workflow phân rã giao việc | `lab-docs/frameworks/delivery-breakdown.md` |
+| Workflow kỹ thuật (spec → ship) | `lab-docs/frameworks/engineering-workflow.md` |
 | Prototypes đã publish | `lab-prototype/` (repo `lab-prototype`) |
 | Production code | `services/lab-*` (Workers), `apps/lab-portal` (React) |
 
