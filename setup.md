@@ -72,6 +72,15 @@ personal-lab/
     └── lab-portal/
 ```
 
+## Wrangler & Cloudflare — quy ước per-service
+
+- **Wrangler là devDependency của từng service repo** (`npm i -D wrangler`), KHÔNG cài global. Mỗi repo pin version riêng để ai clone về đều có toolchain nhất quán.
+- Script chuẩn trong `package.json` của mỗi service: `"dev": "wrangler dev"`, `"deploy": "wrangler deploy"`, `"cf-typegen": "wrangler types"`.
+- **Auth là global per-máy, không per-repo:** `wrangler login` chỉ cần chạy **1 lần duy nhất trên mỗi máy**, token lưu ở user config và dùng chung cho mọi repo. Không yêu cầu login lại trong từng repo.
+- CI/CD (GitHub Actions) KHÔNG dùng `wrangler login`; dùng `CLOUDFLARE_API_TOKEN` với scope hẹp (chỉ Worker/D1 của service đó) qua GitHub Secrets.
+- `wrangler.jsonc` nằm trong từng repo, định nghĩa name/main/compatibility_date/bindings (D1, Service Bindings) riêng của service.
+- KHÔNG tự thêm KV, Queues, Durable Objects vào `wrangler.jsonc` — các mục này DEFERRED (xem `lab-docs/decisions/decision-ledger.md`).
+
 ## Git identity — quy tắc bắt buộc
 
 Git identity được config **per-repo local** (KHÔNG dùng `--global`), trong file
