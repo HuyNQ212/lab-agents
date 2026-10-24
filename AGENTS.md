@@ -60,7 +60,48 @@ Vi phạm các mục này là **bug**, không phải style.
 
 **Giới hạn D1 phải nhớ:** GLOB/LIKE pattern ≤ **50 bytes** · bound param ≤ **100**/query · queries ≤ **50**/invocation trên Free plan.
 
+## Luật cứng frontend (BẮT BUỘC, không phải convention)
+
+> Nguồn: `lab-docs/architecture/frontend.md` §0, §5, §6. Quyết định F-1 → F-10 chốt ngày 2026-10-24.
+
+**Bối cảnh — đọc trước khi làm bất cứ thứ gì ở FE:**
+
+**User KHÔNG đọc source code frontend. User chỉ review giao diện (Storybook + ảnh chụp).**
+Vì vậy: chất lượng code FE phải bảo đảm **bằng máy**, không bằng người review. Khi có hai phương án, chọn phương án **giảm xác suất lỗi ẩn** kể cả nếu code khó đọc hơn.
+
+**Stack đã chốt**
+17. **Styling: Tailwind CSS 4.** Token Quiet Evergreen khai báo trong `@theme` ở **một** file CSS duy nhất. Cấm tạo `tailwind.config.js`; cấm dựng design system trước khi có nhu cầu thật.
+18. **Routing: TanStack Router.** Route tree nông, cấm nested tab. Search params phải typed và validate bằng zod.
+19. **Data fetching: TanStack Query 5.** Cấm tự viết hook fetch/cache. Cấm copy server data vào client state (store, Context, `useState` nhân bản).
+20. **API client: fetch wrapper tự viết** ở `src/shared/api/`. Cấm axios và thư viện HTTP khác.
+21. **Zod parse MỌI response** tại biên trước khi vào component. Cấm `as` để bỏ qua validate.
+22. **Form: react-hook-form + `@hookform/resolvers` + zod.** Cấm validate form bằng HTML attribute thuần khi đã có zod schema tương ứng.
+23. **Không dùng global store** (Zustand/Redux/...). Server state = Query; URL state = router search params; auth = module-scope; còn lại local.
+24. **Auth: access token trong memory.** Cấm localStorage/sessionStorage. Cấm bỏ qua single-flight refresh; cấm retry 401 quá **một** lần.
+25. **Cấm import chéo feature.** Chỉ qua `src/shared/`.
+26. **Cấm merge khi thiếu test tầng 1 và tầng 2** (xem thang 3 tầng bên dưới).
+
+**Thang test 3 tầng — bắt buộc**
+
+| Tầng | Phạm vi | Bắt buộc |
+|---|---|---|
+| 1 — Logic | `client.ts` (single-flight, 401 retry, NO_RETRY), zod schema, query key/invalidate, form validation, route guard | ✅ |
+| 2 — Màn hình | Mỗi route: happy path + error state | ✅ |
+| 3 — Component lẻ | Button, Card, Input… | ❌ chỉ story |
+
+**UI review workflow bắt buộc**
+
+27. **Storybook là bề mặt review UI.** Mỗi màn hình và mỗi component có ≥3 trạng thái phải có story phủ default / loading / empty / error.
+28. **MSW handler là nguồn mock DUY NHẤT.** Đặt ở `features/<name>/mocks.ts`, export bộ có tên (`happy`, `empty`, `error`, `slow`). Story và test **cùng** lấy từ đây; cấm viết mock thứ hai.
+29. **Ảnh review: `npm run shots`** — Playwright script đọc `index.json` của Storybook, chụp mọi story ở desktop 1280 và mobile 390, ghi ra `.artifacts/shots/`. **Cấm dùng Playwright MCP để điều hướng Storybook** (tốn token, không tất định). MCP chỉ dùng để smoke chức năng thật trên app đang chạy.
+
+**Chọn version**
+
+30. Tiêu chí là **độ ổn định và tương thích chéo**, không phải mới nhất. Pin exact, commit lockfile, nâng major từng gói một. Verify bằng `npm run build` + `npm test` + `npm run storybook` thật — không dựa vào changelog hay bảng `latest`.
+
 ## Quy tắc làm việc
+
+> Mục này đánh số riêng, **không** nối tiếp luật cứng ở trên. Khi tài liệu khác dẫn "luật 17–30" thì đó là luật cứng frontend, không phải mục ở đây.
 
 1. **Status vocabulary:** chỉ có DECIDED là ràng buộc. PROPOSED/ASSUMED/DEFERRED/OPEN/OUT OF SCOPE không được tự nâng cấp thành DECIDED.
 2. **Workflow:** BRAINSTORM → Product Brief → BREAKDOWN → Spec/Code. Chỉ tạo Spec/Plan/Code khi user yêu cầu rõ ràng.
@@ -69,6 +110,8 @@ Vi phạm các mục này là **bug**, không phải style.
 5. **Chạy git từ đúng repo**: luôn `cd` vào thư mục repo con trước khi chạy lệnh git. Workspace root không có git.
 6. **Thêm repo mới:** cập nhật bảng trong `setup.md` trước, clone sau, rồi commit vào repo này.
 7. **Git identity:** config per-repo local theo `setup.md`. Username/email là dữ liệu của user — PHẢI hỏi user để lấy giá trị, không hardcode hay suy đoán.
+8. **Hai chế độ review, không lẫn:** backend thì user đọc code/SQL/schema bằng mắt — tránh abstraction che ranh giới. Frontend thì user **không đọc code**, chỉ xem giao diện — chọn phương án khó sai hơn, và mọi thứ phải kiểm được bằng máy (test, typecheck, lint, zod parse).
+9. **Tài liệu tách theo phía:** spec và checklist của backend và frontend để **hai file riêng**. Không gộp, không dùng template phía này cho phía kia.
 
 ## Đọc tài liệu trước khi code
 
