@@ -19,6 +19,7 @@ hoặc tham chiếu đường dẫn — không đoán layout từ trí nhớ phi
 | Quyết định product & kiến trúc | `lab-docs/README.md`, `lab-docs/decisions/decision-ledger.md` |
 | Kiến trúc hệ thống | `lab-docs/architecture/system-overview.md` |
 | Kiến trúc backend (layering, test, deploy) | `lab-docs/architecture/backend.md` |
+| Mẫu code tham chiếu backend (copy được) | `lab-docs/architecture/backend-reference.md` |
 | Frontend & UX | `lab-docs/architecture/frontend.md` |
 | IAM | `lab-docs/architecture/iam.md` |
 | Local dev & secrets | `lab-docs/architecture/local-development.md` |
@@ -29,6 +30,32 @@ hoặc tham chiếu đường dẫn — không đoán layout từ trí nhớ phi
 
 - Prototype được publish vào `lab-prototype`; production code là source of truth về implementation.
 - `lab-docs` là source of truth về các quyết định — KHÔNG tự diễn giải.
+
+## Luật cứng backend (BẮT BUỘC, không phải convention)
+
+Vi phạm các mục này là **bug**, không phải style. Nguồn: [backend.md §10](../../lab-docs/architecture/backend.md).
+
+**D1 / data layer**
+1. **Cấm `SELECT *`.** Liệt kê cột tường minh.
+2. **Cấm `db.prepare(...).bind(...).run()/all()/first()` trực tiếp.** Mọi read/write qua wrapper.
+3. **Cấm `RETURNING`.** Insert/update dựng entity từ input.
+4. **Mọi bảng là `STRICT`.**
+5. **Timestamp là `INTEGER` epoch ms** (`Date.now()`). Cấm `DEFAULT CURRENT_TIMESTAMP`, cấm `strftime('%s','now')` (trả giây).
+6. **Cấm `RENAME` / `DROP TABLE`** trong migration. Forward-only additive.
+7. **Cấm sửa tay bảng `d1_migrations`.**
+8. **Chunk write theo 100 bound param/query.**
+9. Bulk write dùng `db.batch()`, không loop từng câu.
+
+**Code JS/TS**
+10. **Cấm `this` trong repository factory.**
+11. **Cấm `console.log` với template string**; chỉ dùng `log(level, message, fields)` với object.
+12. **Cấm `c.get('deps')` trong `error-handler.ts`**; bắt buộc `c.var.deps`.
+13. **Cấm cache `deps` ở module scope.** `createDeps(env, ctx)` gọi mỗi request.
+14. **Cấm `Extract<RequestContext, ...>`.** Dùng named type + `if` narrowing.
+15. **Cấm gọi public URL cho internal service call.** Luôn dùng Service Binding.
+16. **Cấm `userId: string | null`.** Dùng discriminated union.
+
+**Giới hạn D1 phải nhớ:** GLOB/LIKE pattern ≤ **50 bytes** · bound param ≤ **100**/query · queries ≤ **50**/invocation trên Free plan.
 
 ## Quy tắc làm việc
 
