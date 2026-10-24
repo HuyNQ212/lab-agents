@@ -33,7 +33,10 @@ hoặc tham chiếu đường dẫn — không đoán layout từ trí nhớ phi
 
 ## Luật cứng backend (BẮT BUỘC, không phải convention)
 
-Vi phạm các mục này là **bug**, không phải style. Nguồn: [backend.md §10](../../lab-docs/architecture/backend.md).
+Vi phạm các mục này là **bug**, không phải style.
+
+> Nguồn: `lab-docs/architecture/backend.md` §10 (luật + lý do) và `lab-docs/architecture/backend-reference.md` (code mẫu).
+> Ghi dạng path, không dùng link tương đối — `.agents` là repo riêng, link `../../lab-docs` sẽ hỏng khi clone độc lập.
 
 **D1 / data layer**
 1. **Cấm `SELECT *`.** Liệt kê cột tường minh.
