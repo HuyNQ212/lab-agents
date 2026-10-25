@@ -103,14 +103,18 @@ Với nhánh frontend, nhắc rõ: user sẽ review **giao diện**, không revi
 
 ### 5. WRITE
 
-Đặt tên file theo nhánh:
+Đặt file trong **thư mục ID** (`specs/<ID>/`), đúng chuẩn `lab-docs/frameworks/documentation-standards.md` §2:
 
 | Nhánh | Đường dẫn |
 |---|---|
-| Backend | `lab-docs/products/<product>/spec-backend.md` hoặc `lab-docs/platform/<cap>/spec-backend.md` |
-| Frontend | `lab-docs/products/<product>/spec-frontend.md` hoặc `lab-docs/platform/<cap>/spec-frontend.md` |
+| Backend | `lab-docs/products/<product>/specs/<ID>/spec-backend.md` hoặc `lab-docs/platform/<cap>/specs/<ID>/spec-backend.md` |
+| Frontend | `…/specs/<ID>/spec-frontend.md` (cùng thư mục ID với backend) |
 
 Sửa file đã có thay vì tạo file trùng. Đọc lại file sau khi ghi.
+
+### 5b. Ticket nhỏ — không phải story/epic
+
+Việc không có trong `stories.md` vẫn dùng skill này, nhưng thay spec bằng **`ticket.md` một trang** (5 mục: bối cảnh, outcome, tiêu chí xong, skill nào bỏ qua và vì sao, liên kết ledger). ID dùng tiền tố reserved: `SETUP-`, `MAINT-`, `EXP-`. Gate không được miễn. Chi tiết: `documentation-standards.md` §3.
 
 ## Quy tắc nội dung — backend
 

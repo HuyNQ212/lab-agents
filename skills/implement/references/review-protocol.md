@@ -65,7 +65,7 @@ Chỉ báo cáo finding. Không sửa file.
 
 <spec section>
 <git diff>
-<đường dẫn .artifacts/shots/*.png>
+<đường dẫn docs/delivery/<ID>/shots/*.png>
 ```
 
 ## Triage — bắt buộc, không được bỏ

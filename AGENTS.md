@@ -112,6 +112,11 @@ Vì vậy: chất lượng code FE phải bảo đảm **bằng máy**, không b
 7. **Git identity:** config per-repo local theo `setup.md`. Username/email là dữ liệu của user — PHẢI hỏi user để lấy giá trị, không hardcode hay suy đoán.
 8. **Hai chế độ review, không lẫn:** backend thì user đọc code/SQL/schema bằng mắt — tránh abstraction che ranh giới. Frontend thì user **không đọc code**, chỉ xem giao diện — chọn phương án khó sai hơn, và mọi thứ phải kiểm được bằng máy (test, typecheck, lint, zod parse).
 9. **Tài liệu tách theo phía:** spec và checklist của backend và frontend để **hai file riêng**. Không gộp, không dùng template phía này cho phía kia.
+10. **Lưu trữ artifact theo chuẩn** `lab-docs/frameworks/documentation-standards.md`:
+    - Quyết định/spec → `lab-docs` (`specs/<ID>/`), bằng chứng thực thi → `<repo>/docs/delivery/<ID>/`, hai lớp không trộn.
+    - **Mọi việc đều có ID.** Việc không có trong `stories.md` dùng tiền tố reserved `SETUP-`, `MAINT-`, `EXP-` kèm `ticket.md` một trang.
+    - Bằng chứng (gate, đo đạc query, triage, ảnh chụp) **phải commit và merge vào `main` cùng PR** — bằng chứng nằm trên nhánh đã xóa thì bằng không.
+    - Bằng chứng không sửa sau khi ghi, chỉ append. Spec sai thì sửa spec trong `lab-docs`, không sửa bằng chứng.
 
 ## Đọc tài liệu trước khi code
 

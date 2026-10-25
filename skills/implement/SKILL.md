@@ -137,8 +137,10 @@ Commit chỉ được tạo khi đủ bảng này. Thiếu ô nào → chưa xon
 | Phía | Bằng chứng |
 |---|---|
 | **Backend** | `npm test` pass (kèm số test) · `typecheck` + `lint` sạch · file `.sql` đã apply local (nếu có migration) · nếu có endpoint: một lời gọi thật trả đúng status/body · `rows_read` không tăng tuyến tính với query mới |
-| **Frontend** | `typecheck` + `lint` + `test` sạch · danh sách story đã phủ + trạng thái nào · **đường dẫn ảnh** trong `.artifacts/shots/` · 4 câu đọc ảnh đã trả lời (xem reference) |
+| **Frontend** | `typecheck` + `lint` + `test` sạch · danh sách story đã phủ + trạng thái nào · **đường dẫn ảnh** trong `docs/delivery/<ID>/shots/` · 4 câu đọc ảnh đã trả lời (xem reference) |
 | **Chung** | commit hash + message · danh sách finding REJECT kèm lý do · finding ESCALATE (nếu có) chưa sửa, đang chờ user |
+
+**Vị trí artifact** theo chuẩn `lab-docs/frameworks/documentation-standards.md` §2: gate output, đo đạc query, triage ghi vào `<repo>/docs/delivery/<ID>/`; ảnh chụp vào `docs/delivery/<ID>/shots/`. Bằng chứng **phải được commit và merge vào `main` cùng PR** — bằng chứng nằm chết trên nhánh đã xóa thì bằng không.
 
 ## Dừng và báo user khi
 

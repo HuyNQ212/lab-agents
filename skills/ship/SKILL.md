@@ -35,7 +35,8 @@ NHÁNH feature ──push──> PR ──merge──> main ──migration─�
 
 ## Phase 0 — Inventory & Plan (chỉ đọc, không side effect)
 
-Đầu ra là **một tài liệu plan**, dùng `references/plan-template.md`. Không hành động gì ở phase này.
+Đầu ra là **một tài liệu plan**, dùng `references/plan-template.md`, lưu tại
+`lab-docs/products|platform/<tên>/specs/<ship-ID>/ship-plan.md` và review tại `ship-plan-review.md` cùng thư mục (chuẩn `lab-docs/frameworks/documentation-standards.md` §2). Không hành động gì ở phase này.
 
 | Mục | Xác định bằng |
 |---|---|
@@ -53,7 +54,7 @@ Working tree bẩn không rõ nguồn gốc → **dừng**.
 
 ## Phase 1 — Plan review (reviewer fresh)
 
-Reviewer nhận **chỉ plan**, không nhận reasoning người viết plan. Checklist `references/deploy-checklist.md` §"Plan review".
+Reviewer nhận **chỉ plan**, không nhận reasoning người viết plan. Checklist `references/deploy-checklist.md` §"Plan review". Finding review ghi vào `ship-plan-review.md`.
 
 Plan phải đạt **PASS** mới thực thi. `NEEDS WORK` → sửa plan, review lại. `BLOCK` → báo user.
 
@@ -183,7 +184,7 @@ Thêm binding mới: deploy callee trước rồi mới caller. Đảo lại →
 
 Đây là bước **user** smoke. Skill đưa danh sách cần tick và bằng chứng cần nhìn, không tự kết luận "ổn".
 
-Ghi log ship: repo/commit đã push, PR đã merge (số), Worker version đã deploy, migration file đã apply, bằng chứng verify.
+Ghi log ship vào `execution-log.md` cùng thư mục với plan (chuẩn `documentation-standards.md` §2): repo/commit đã push, PR đã merge (số), Worker version đã deploy, migration file đã apply, bằng chứng verify. Log là **append-only** — không sửa dòng cũ.
 
 ## Thứ tự push và deploy
 

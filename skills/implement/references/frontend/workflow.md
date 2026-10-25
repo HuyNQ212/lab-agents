@@ -71,7 +71,7 @@ curl -s http://localhost:6006/index.json > /dev/null && echo ready
 
 Nếu chưa ready thì chờ và thử lại, tối đa ~30 giây, rồi báo user.
 
-`npm run shots` là Playwright script đọc `index.json`, chụp mọi story ở desktop 1280 và mobile 390 → `.artifacts/shots/<storyId>-desktop.png` và `-mobile.png`.
+`npm run shots` là Playwright script đọc `index.json`, chụp mọi story ở desktop 1280 và mobile 390 → `docs/delivery/<ID>/shots/<storyId>-desktop.png` và `-mobile.png` (chuẩn lưu trữ: `lab-docs/frameworks/documentation-standards.md` §2).
 
 Lệnh này **tất định, một lần, không tốn token**. Cấm dùng Playwright MCP để điều hướng Storybook (tốn token, không tất định, đã từng mất ~10 step chỉ để vào một story). MCP chỉ dùng khi cần smoke chức năng thật trên app đang chạy.
 

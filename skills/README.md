@@ -59,6 +59,7 @@ Các file `references/spec-template.md` và `references/checklist.md` ở gốc 
 
 ## Quy ước
 
+- **Lưu trữ artifact theo** `lab-docs/frameworks/documentation-standards.md` — hai lớp: quyết định ở `lab-docs`, bằng chứng ở `<repo>/docs/delivery/<ID>/`, spec ở `specs/<ID>/`. Ticket nhỏ dùng `ticket.md` một trang với ID tiền tố `SETUP-/MAINT-/EXP-`.
 - Mỗi skill một thư mục, `SKILL.md` bắt buộc; tài liệu dài để trong `references/<nhánh>/`.
 - `SKILL.md` chỉ chứa quyết định và luật; **không copy code** từ `backend-reference.md`.
 - Checklist review **không nhân bản**: `implement` trỏ tới `architecture-review/references/`.
