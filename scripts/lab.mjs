@@ -81,9 +81,14 @@ function validate(files) {
     if (seen.has(meta.id)) put(`ID trùng "${meta.id}" với ${seen.get(meta.id)}`);
     seen.set(meta.id, path);
 
+    if (meta.type === "story" && !meta.brief) put("story thiếu khóa `brief:` (ID brief đang cover) — chuẩn hóa theo documentation-standards §0d");
+    if (meta.type === "story" && !meta.covers) put("story thiếu khóa `covers:` (capability IDs) — chuẩn hóa theo documentation-standards §0d");
+    if (meta.type === "brief" && meta.id.endsWith("-BRIEF") && !meta["brief-version"]) put("brief thiếu khóa `brief-version:` — chuẩn hóa theo documentation-standards §0d");
+
     if (!meta.type) put("thiếu type");
-    if (!meta.status) put("thiếu status");
-    else if (!STATUS_VALUES.includes(meta.status)) put(`status "${meta.status}" không hợp lệ (open|in-progress|blocked|done|abandoned)`);
+    if (!meta.status && meta.type !== "epic") put("thiếu status");
+    if (meta.status && meta.type === "epic") put("epic không có status — lifecycle của epic do story con quyết định");
+    else if (meta.type !== "epic" && !STATUS_VALUES.includes(meta.status)) put(`status "${meta.status}" không hợp lệ (open|in-progress|blocked|done|abandoned)`);
     if (!meta.repos) put("thiếu repos (dùng [] nếu không chạm repo code)");
     if (meta.type === "ticket" && meta.parent && !RESERVED_PREFIXES.includes(meta.id.split("-")[0]) && !meta.parent) put("ticket không thuộc prefix reserved mà thiếu parent");
 
@@ -158,6 +163,83 @@ function markDone(files, id, force = false) {
   return msg.trimEnd();
 }
 
+// ---------- coverage ----------
+
+// Capability list machine-readable trong brief: section `## Capabilities`
+// mỗi bullet một dòng dạng `- C1: <mô tả> [status]` (status tùy chọn: OPEN|DECIDED|DEFERRED)
+function parseCapabilities(text) {
+  const m = text.match(/^## Capabilities\s*$/m);
+  if (!m) return null;
+  const rest = text.slice(m.index + m[0].length);
+  const end = rest.search(/^## /m);
+  const body = end === -1 ? rest : rest.slice(0, end);
+  const caps = [];
+  const re = /^[-*]\s+([A-Z]\d+):\s*(.+)$/gm;
+  let c;
+  while ((c = re.exec(body))) {
+    const id = c[1];
+    let desc = c[2].trim();
+    let status = "";
+    const sm = desc.match(/\[(OPEN|DECIDED|DEFERRED)\]\s*$/i);
+    if (sm) { status = sm[1].toUpperCase(); desc = desc.slice(0, sm.index).trim(); }
+    caps.push({ id, desc, status });
+  }
+  return caps;
+}
+
+function coverage(files, prefix) {
+  const prefixU = prefix.toUpperCase();
+  const briefs = files.filter(f => f.meta.type === "brief" && f.meta.id.startsWith(prefixU + "-BRIEF"));
+  if (!briefs.length) return `Không tìm thấy brief type=brief với id ${prefixU}-BRIEF*. Chạy grilling để tạo product-brief.md có frontmatter.`;
+  // version mới nhất: ưu tiên khóa brief-version, fallback sort id
+  briefs.sort((a, b) => String(b.meta["brief-version"] || b.meta.id).localeCompare(String(a.meta["brief-version"] || a.meta.id), undefined, { numeric: true }));
+  const brief = briefs[0];
+  const caps = parseCapabilities(brief.text);
+  if (!caps || !caps.length) {
+    return `${brief.rel}: không parse được section "## Capabilities". Brief phải có:\n\n  ## Capabilities\n  - C1: <mô tả> [DECIDED]\n  - C2: ...\n`;
+  }
+  // Chỉ story/ticket cùng prefix với brief mới match — ID capability (C1...) là scope của brief, không trùng chéo
+  const items = files.filter(f =>
+    (f.meta.type === "story" || f.meta.type === "ticket") &&
+    f.meta.id.startsWith(prefixU + "-") &&
+    (Array.isArray(f.meta.covers) ? f.meta.covers : [f.meta.covers].filter(Boolean)).some(cid =>
+      caps.some(cap => cap.id === cid)
+    )
+  );
+  const coveredBy = {};
+  for (const it of items) {
+    const covers = Array.isArray(it.meta.covers) ? it.meta.covers : [it.meta.covers].filter(Boolean);
+    for (const cid of covers) (coveredBy[cid] = coveredBy[cid] || []).push(it);
+  }
+  const w = [6, 40, 12, 14, 26, 40];
+  const line = (c) => c.map((s, i) => String(s).padEnd(w[i])).join(" | ");
+  console.log(`Brief: ${brief.meta.id} (version ${brief.meta["brief-version"] || "?"}, ${brief.meta.date || "?"}) — ${brief.rel}\n`);
+  console.log(line(["CAP", "MÔ TẢ", "TRẠNG THÁI", "COVERAGE", "STORY/TICKET", "GHI CHÚ"]));
+  console.log(w.map(n => "-".repeat(n)).join("-+-"));
+  let covered = 0, uncovered = 0, stale = 0, deferred = 0;
+  for (const cap of caps) {
+    const its = coveredBy[cap.id] || [];
+    let cov = "UNCOVERED", note = "";
+    if (cap.status === "DEFERRED") { cov = "DEFERRED"; deferred++; }
+    else if (its.length) { cov = "COVERED"; covered++; }
+    else { uncovered++; }
+    // STALE: story cover nhưng trỏ brief ID/version khác brief hiện tại
+    for (const it of its) {
+      if (it.meta.brief && String(it.meta.brief) !== String(brief.meta.id)) {
+        cov = cov === "COVERED" ? "STALE" : cov;
+        note = `story trỏ ${it.meta.brief}`;
+        stale++;
+        break;
+      }
+    }
+    const ids = its.map(x => x.meta.id).join(", ") || "—";
+    console.log(line([cap.id, cap.desc.slice(0, w[1] - 1), cap.status || "—", cov, ids.slice(0, w[4] - 1), note || (cov === "UNCOVERED" ? "cần breakdown" : "")]));
+  }
+  console.log(`\n${caps.length} capability: COVERED=${covered + stale} (trong đó STALE=${stale}) UNCOVERED=${uncovered} DEFERRED=${deferred}`);
+  if (uncovered || stale) console.log(`→ Chạy breakdown cho ${uncovered} capability UNCOVERED; rà lại ${stale} story STALE với brief mới.`);
+  return null;
+}
+
 // ---------- render ----------
 
 function statusTable(files) {
@@ -224,7 +306,13 @@ switch (cmd) {
     console.log(show(files, args[0]));
     break;
   }
+  case "coverage": {
+    if (!args[0]) { console.error("Dùng: lab coverage <PREFIX>  (vd: coverage PLN)"); process.exit(2); }
+    const err = coverage(files, args[0]);
+    if (err) { console.error(err); process.exit(2); }
+    break;
+  }
   default:
-    console.error(`Lệnh lạ "${cmd}". Có: status | check | tick <ID> <Tn> | untick <ID> <Tn> | done <ID> [--force] | show <ID>`);
+    console.error(`Lệnh lạ "${cmd}". Có: status | check | tick <ID> <Tn> | untick <ID> <Tn> | done <ID> [--force] | show <ID> | coverage <PREFIX>`);
     process.exit(2);
 }
