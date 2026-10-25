@@ -11,6 +11,8 @@ stories → to-spec → architecture-review → implement → ship → productio
 
 `implement` gồm cả review + triage. Không có skill `code-review` riêng — review đã nằm trong vòng lặp implement.
 
+`capture` không nằm trên chuỗi chính — nó được gọi **ngang** từ bất kỳ điểm nào (implement phát hiện việc ngoài ticket, user nêu việc mới) để xếp vào story có sẵn hoặc sinh ticket nhỏ.
+
 ## Nguyên tắc tách nhánh
 
 Ba skill đầu có **hai nhánh riêng biệt**, không trộn:
@@ -32,6 +34,7 @@ Story chạm cả hai phía → hai spec (`spec-backend.md`, `spec-frontend.md`)
 | `architecture-review` | ✅ Đủ hai nhánh | `SKILL.md` + `references/backend/` + `references/frontend/` |
 | `implement` | ✅ Đủ hai nhánh | `SKILL.md` + `references/review-protocol.md` + `references/backend/` + `references/frontend/` |
 | `ship` | ✅ | `SKILL.md` + `references/plan-template.md` + `references/deploy-checklist.md` |
+| `capture` | ✅ | `SKILL.md` — xếp việc lộ ra vào story hoặc ticket nhỏ `SETUP-/MAINT-/EXP-` |
 
 **Đã bỏ:** `code-review` — review + triage nằm trong `implement`.
 
@@ -57,9 +60,20 @@ Các file `references/spec-template.md` và `references/checklist.md` ở gốc 
 
 **`implement` không push `main`, không deploy, không tạo PR.** Ba việc đó thuộc `ship`.
 
+## Quản lý tiến độ bằng script
+
+Mọi file theo dõi có frontmatter cố định (`id/type/status/repos/parent`) và khối `## Tasks` với `- [ ] T<n>:` — chuẩn ở `lab-docs/frameworks/documentation-standards.md` §0. **Không đọc 20 file để báo tiến độ** — chạy:
+
+```bash
+node .agents/scripts/lab.mjs status   # bảng tổng hợp mọi ID
+node .agents/scripts/lab.mjs check    # validate trước khi commit (bắt buộc)
+node .agents/scripts/lab.mjs tick <ID> <Tn>
+node .agents/scripts/lab.mjs done <ID>
+```
+
 ## Quy ước
 
-- **Lưu trữ artifact theo** `lab-docs/frameworks/documentation-standards.md` — hai lớp: quyết định ở `lab-docs`, bằng chứng ở `<repo>/docs/delivery/<ID>/`, spec ở `specs/<ID>/`. Ticket nhỏ dùng `ticket.md` một trang với ID tiền tố `SETUP-/MAINT-/EXP-`.
+- **Lưu trữ artifact theo** `lab-docs/frameworks/documentation-standards.md` — hai lớp: quyết định ở `lab-docs`, bằng chứng ở `<repo>/docs/delivery/<ID>/`, spec ở `specs/<ID>/`. Ticket nhỏ dùng `ticket.md` một trang với ID tiền tố `SETUP-/MAINT-/EXP-` (template trong `capture/SKILL.md`).
 - Mỗi skill một thư mục, `SKILL.md` bắt buộc; tài liệu dài để trong `references/<nhánh>/`.
 - `SKILL.md` chỉ chứa quyết định và luật; **không copy code** từ `backend-reference.md`.
 - Checklist review **không nhân bản**: `implement` trỏ tới `architecture-review/references/`.

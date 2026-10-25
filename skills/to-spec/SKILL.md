@@ -114,7 +114,12 @@ Sửa file đã có thay vì tạo file trùng. Đọc lại file sau khi ghi.
 
 ### 5b. Ticket nhỏ — không phải story/epic
 
-Việc không có trong `stories.md` vẫn dùng skill này, nhưng thay spec bằng **`ticket.md` một trang** (5 mục: bối cảnh, outcome, tiêu chí xong, skill nào bỏ qua và vì sao, liên kết ledger). ID dùng tiền tố reserved: `SETUP-`, `MAINT-`, `EXP-`. Gate không được miễn. Chi tiết: `documentation-standards.md` §3.
+Việc lộ ra ngoài `stories.md` thường đi qua skill **`capture`** trước — nó quyết định xếp vào story có sẵn hay sinh ticket nhỏ. Khi tự viết ticket nhỏ:
+
+- Thay spec bằng **`ticket.md` một trang** theo template trong `capture/SKILL.md` §2 (frontmatter `id/type/status/repos/parent` + khối Tasks).
+- ID tiền tố reserved: `SETUP-`, `MAINT-`, `EXP-` — kiểm trùng bằng `lab status` trước khi đặt.
+- File theo dõi phải có frontmatter chuẩn (§0) để vào bảng `lab status`.
+- Gate không được miễn.
 
 ## Quy tắc nội dung — backend
 

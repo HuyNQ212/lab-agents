@@ -99,6 +99,15 @@ Vì vậy: chất lượng code FE phải bảo đảm **bằng máy**, không b
 
 30. Tiêu chí là **độ ổn định và tương thích chéo**, không phải mới nhất. Pin exact, commit lockfile, nâng major từng gói một. Verify bằng `npm run build` + `npm test` + `npm run storybook` thật — không dựa vào changelog hay bảng `latest`.
 
+## Quản lý tiến độ bằng script (bắt buộc)
+
+Mọi file theo dõi trong `lab-docs` có frontmatter `id/type/status/repos/parent` và khối `## Tasks` dạng `- [ ] T<n>: <mô tả>` — chuẩn `lab-docs/frameworks/documentation-standards.md` §0.
+
+- **Báo tiến độ = `node .agents/scripts/lab.mjs status`.** Cấm đọc hàng chục file để tổng hợp tay.
+- **Trước khi commit mọi thay đổi file theo dõi = `node .agents/scripts/lab.mjs check`.**
+- Đánh xong task = `lab tick <ID> <Tn>`; đánh xong cả file = `lab done <ID>` (chặn nếu còn task mở). Không sửa tay status `done`.
+- Việc lộ ra ngoài ticket → skill `capture` xếp vào story có sẵn hoặc ticket nhỏ `SETUP-/MAINT-/EXP-`.
+
 ## Quy tắc làm việc
 
 > Mục này đánh số riêng, **không** nối tiếp luật cứng ở trên. Khi tài liệu khác dẫn "luật 17–30" thì đó là luật cứng frontend, không phải mục ở đây.
@@ -114,7 +123,8 @@ Vì vậy: chất lượng code FE phải bảo đảm **bằng máy**, không b
 9. **Tài liệu tách theo phía:** spec và checklist của backend và frontend để **hai file riêng**. Không gộp, không dùng template phía này cho phía kia.
 10. **Lưu trữ artifact theo chuẩn** `lab-docs/frameworks/documentation-standards.md`:
     - Quyết định/spec → `lab-docs` (`specs/<ID>/`), bằng chứng thực thi → `<repo>/docs/delivery/<ID>/`, hai lớp không trộn.
-    - **Mọi việc đều có ID.** Việc không có trong `stories.md` dùng tiền tố reserved `SETUP-`, `MAINT-`, `EXP-` kèm `ticket.md` một trang.
+    - **Mọi việc đều có ID.** Việc không có trong `stories.md` đi qua skill `capture` → story có sẵn hoặc ticket nhỏ `SETUP-/MAINT-/EXP-` với `ticket.md` một trang.
+    - Ticket chạm nhiều repo vẫn **một file một ID** trong `lab-docs`; trường `repos` liệt kê hết, bằng chứng mỗi repo nằm trong repo đó.
     - Bằng chứng (gate, đo đạc query, triage, ảnh chụp) **phải commit và merge vào `main` cùng PR** — bằng chứng nằm trên nhánh đã xóa thì bằng không.
     - Bằng chứng không sửa sau khi ghi, chỉ append. Spec sai thì sửa spec trong `lab-docs`, không sửa bằng chứng.
 
