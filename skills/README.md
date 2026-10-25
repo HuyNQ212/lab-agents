@@ -6,8 +6,10 @@
 ## Chuỗi
 
 ```text
-stories → to-spec → architecture-review → implement → ship → production
+grilling → to-spec → architecture-review → implement → ship → production
 ```
+
+`grilling` đứng đầu chuỗi: biến ý tưởng thô thành Product Brief, stories sinh ra từ đó. Nó gồm hai mode bên trong (EXPLORE cho ý tưởng mơ hồ, GRILL cho decision frontier) với gate tự chuyển — xem `grilling/SKILL.md`.
 
 `implement` gồm cả review + triage. Không có skill `code-review` riêng — review đã nằm trong vòng lặp implement.
 
@@ -35,6 +37,7 @@ Story chạm cả hai phía → hai spec (`spec-backend.md`, `spec-frontend.md`)
 | `implement` | ✅ Đủ hai nhánh | `SKILL.md` + `references/review-protocol.md` + `references/backend/` + `references/frontend/` |
 | `ship` | ✅ | `SKILL.md` + `references/plan-template.md` + `references/deploy-checklist.md` |
 | `capture` | ✅ | `SKILL.md` — xếp việc lộ ra vào story hoặc ticket nhỏ `SETUP-/MAINT-/EXP-` |
+| `grilling` | ✅ | `SKILL.md` — EXPLORE/GRILL/CONVERGE, output Product Brief; đứng ngoài nhánh BE/FE |
 
 **Đã bỏ:** `code-review` — review + triage nằm trong `implement`.
 
@@ -42,6 +45,7 @@ Story chạm cả hai phía → hai spec (`spec-backend.md`, `spec-frontend.md`)
 
 | Skill | File |
 |---|---|
+| `grilling` | `SKILL.md` |
 | `to-spec` | `SKILL.md`<br>`references/backend/spec-template.md`<br>`references/frontend/spec-template.md` |
 | `architecture-review` | `SKILL.md`<br>`references/backend/checklist.md`<br>`references/frontend/checklist.md` |
 | `implement` | `SKILL.md`<br>`references/review-protocol.md`<br>`references/backend/workflow.md`<br>`references/frontend/workflow.md` |
@@ -53,6 +57,7 @@ Các file `references/spec-template.md` và `references/checklist.md` ở gốc 
 
 | Việc | Skill | Ghi chú |
 |---|---|---|
+| Brainstorm ý tưởng → Product Brief | `grilling` | Không spec, không code |
 | Viết spec | `to-spec` | Không code |
 | Phản biện spec/schema | `architecture-review` | Không sửa |
 | Code + test + review + commit | `implement` | Nhánh feature, **push lên nhánh** |
