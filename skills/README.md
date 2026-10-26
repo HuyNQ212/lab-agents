@@ -41,8 +41,11 @@ Story chạm cả hai phía → hai spec (`spec-backend.md`, `spec-frontend.md`)
 | `capture` | ✅ | `SKILL.md` — xếp việc lộ ra vào story hoặc ticket nhỏ `SETUP-/MAINT-/EXP-` |
 | `grilling` | ✅ | `SKILL.md` — EXPLORE/GRILL/CONVERGE, output Product Brief; đứng ngoài nhánh BE/FE |
 | `breakdown` | ✅ | `SKILL.md` — coverage audit qua `lab coverage`, output stories/ per-file; đứng ngoài nhánh BE/FE |
+| `to-html` | ✅ | `SKILL.md` + `references/theme.css` — render tài liệu ra một trang HTML self-contained; tiện ích ngoài chuỗi, không thuộc nhánh BE/FE |
 
 **Đã bỏ:** `code-review` — review + triage nằm trong `implement`.
+
+`to-html` là **tiện ích trình bày**, đứng ngoài chuỗi `grilling → breakdown → to-spec → architecture-review → implement → ship`. Nó không tạo quyết định, không sửa tài liệu nguồn.
 
 ## File hiện có
 
@@ -50,10 +53,12 @@ Story chạm cả hai phía → hai spec (`spec-backend.md`, `spec-frontend.md`)
 |---|---|
 | `grilling` | `SKILL.md` |
 | `breakdown` | `SKILL.md` |
+| `capture` | `SKILL.md` |
 | `to-spec` | `SKILL.md`<br>`references/backend/spec-template.md`<br>`references/frontend/spec-template.md` |
 | `architecture-review` | `SKILL.md`<br>`references/backend/checklist.md`<br>`references/frontend/checklist.md` |
 | `implement` | `SKILL.md`<br>`references/review-protocol.md`<br>`references/backend/workflow.md`<br>`references/frontend/workflow.md` |
 | `ship` | `SKILL.md`<br>`references/plan-template.md`<br>`references/deploy-checklist.md` |
+| `to-html` | `SKILL.md`<br>`references/theme.css` |
 
 Các file `references/spec-template.md` và `references/checklist.md` ở gốc chỉ còn là stub điều hướng.
 
