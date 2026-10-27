@@ -6,10 +6,12 @@
 ## Chuỗi
 
 ```text
-grilling → breakdown → to-spec → architecture-review → implement → ship → production
+grilling → prototype → breakdown → to-spec → architecture-review → implement → ship → production
 ```
 
 `grilling` đứng đầu: biến ý tưởng thô thành Product Brief (what/why). Hai mode bên trong (EXPLORE cho ý tưởng mơ hồ, GRILL cho decision frontier) với gate tự chuyển — xem `grilling/SKILL.md`.
+
+`prototype` **tùy chọn**, đứng trước `breakdown`: dựng UX prototype HTML-first để user duyệt giao diện/hành vi trước khi chốt story. Chỉ dùng khi user yêu cầu — không tự chạy. Có gate user duyệt bắt buộc — xem `prototype/SKILL.md`.
 
 `breakdown` lấy Product Brief, chạy coverage audit **bằng script** (`lab coverage <PREFIX>`, không audit tay), sau scope confirmation phân rã Epics/Stories/AC. Stories là một file một ID (`stories/<ID>.md` với `brief:` + `covers:`) — xem `breakdown/SKILL.md`.
 
@@ -40,6 +42,7 @@ Story chạm cả hai phía → hai spec (`spec-backend.md`, `spec-frontend.md`)
 | `ship` | ✅ | `SKILL.md` + `references/plan-template.md` + `references/deploy-checklist.md` |
 | `capture` | ✅ | `SKILL.md` — xếp việc lộ ra vào story hoặc ticket nhỏ `SETUP-/MAINT-/EXP-` |
 | `grilling` | ✅ | `SKILL.md` — EXPLORE/GRILL/CONVERGE, output Product Brief; đứng ngoài nhánh BE/FE |
+| `prototype` | ✅ | `SKILL.md` + `references/` — HTML-first UX prototype; lint chặn cứng, tự phê bằng ảnh qua sub-agent (trần 3 vòng), gate user duyệt; đứng ngoài nhánh BE/FE |
 | `breakdown` | ✅ | `SKILL.md` — coverage audit qua `lab coverage`, output stories/ per-file; đứng ngoài nhánh BE/FE |
 | `to-html` | ✅ | `SKILL.md` + `references/theme.css` — render tài liệu ra một trang HTML self-contained; tiện ích ngoài chuỗi, không thuộc nhánh BE/FE |
 
@@ -52,6 +55,7 @@ Story chạm cả hai phía → hai spec (`spec-backend.md`, `spec-frontend.md`)
 | Skill | File |
 |---|---|
 | `grilling` | `SKILL.md` |
+| `prototype` | `SKILL.md`<br>`references/checklist.md`<br>`references/critique-loop.md`<br>`references/shell.md`<br>`references/app-screen.md` |
 | `breakdown` | `SKILL.md` |
 | `capture` | `SKILL.md` |
 | `to-spec` | `SKILL.md`<br>`references/backend/spec-template.md`<br>`references/frontend/spec-template.md` |
@@ -67,6 +71,7 @@ Các file `references/spec-template.md` và `references/checklist.md` ở gốc 
 | Việc | Skill | Ghi chú |
 |---|---|---|
 | Brainstorm ý tưởng → Product Brief | `grilling` | Không spec, không code |
+| Dựng UX prototype, tự phê, chờ duyệt | `prototype` | Tùy chọn; HTML-first; không thay spec |
 | Product Brief → Stories/AC | `breakdown` | Coverage audit bằng script; checkpoint user bắt buộc |
 | Viết spec | `to-spec` | Không code |
 | Phản biện spec/schema | `architecture-review` | Không sửa |
@@ -85,6 +90,8 @@ node .agents/scripts/lab.mjs check    # validate trước khi commit (bắt bu�
 node .agents/scripts/lab.mjs tick <ID> <Tn>
 node .agents/scripts/lab.mjs done <ID>
 node .agents/scripts/lab.mjs coverage <PREFIX>   # audit coverage brief ↔ stories cho breakdown
+node .agents/scripts/lint-prototype.mjs          # luật prototype, CHẶN CỨNG (L1–L7)
+node .agents/scripts/shots.mjs                   # ảnh mọi trang prototype, desktop + mobile
 ```
 
 ## Quy ước

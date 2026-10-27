@@ -44,7 +44,7 @@ User không nói thời điểm thì suy ra từ artifact được đưa. Không
 
 1. Artifact cần review (story / spec / db-schema / mô tả giao diện).
 2. `lab-docs/decisions/decision-ledger.md` — chỉ dòng DECIDED là ràng buộc.
-3. `lab-docs/frameworks/engineering-workflow.md` §4.2 — DoD hiện có.
+3. `lab-docs/frameworks/engineering-workflow.md` §5.2 — DoD hiện có.
 
 ### Nhánh backend — đọc thêm
 

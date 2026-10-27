@@ -26,6 +26,7 @@ hoặc tham chiếu đường dẫn — không đoán layout từ trí nhớ phi
 | Workflow phân rã giao việc | `lab-docs/frameworks/delivery-breakdown.md` |
 | Workflow kỹ thuật (spec → ship) | `lab-docs/frameworks/engineering-workflow.md` |
 | Prototypes đã publish | `lab-prototype/` (repo `lab-prototype`) |
+| Shell + token prototype dùng chung | `lab-prototype/shared/` — hợp đồng ở `.agents/skills/prototype/references/shell.md` |
 | Production code | `services/lab-*` (Workers), `apps/lab-portal` (React) |
 
 - Prototype được publish vào `lab-prototype`; production code là source of truth về implementation.
@@ -116,6 +117,7 @@ Mọi file theo dõi trong `lab-docs` có frontmatter `id/type/status/repos/pare
 2. **Workflow:** BRAINSTORM → Product Brief → BREAKDOWN → Spec/Code. Chỉ tạo Spec/Plan/Code khi user yêu cầu rõ ràng.
 3. **Cloudflare:** backend multi-repo, mỗi service là một Worker + D1 riêng, private, gọi nhau qua Service Bindings. API Gateway là public entry duy nhất. KHÔNG tự thêm KV, Queues, Durable Objects, Redis — các mục này DEFERRED.
 4. **Không commit secrets** (plaintext, age private key). Dev secrets dùng SOPS trong `lab-secrets/`.
+4b. **Prototype: token màu chỉ khai trong `lab-prototype/shared/tokens.css`; trang dùng shell chung qua `Workspace.renderShell`; trước khi báo xong phải chạy `node .agents/scripts/lint-prototype.mjs` (chặn cứng) và `node .agents/scripts/shots.mjs`.** Chi tiết: skill `prototype`.
 5. **Chạy git từ đúng repo**: luôn `cd` vào thư mục repo con trước khi chạy lệnh git. Workspace root không có git.
 6. **Thêm repo mới:** cập nhật bảng trong `setup.md` trước, clone sau, rồi commit vào repo này.
 7. **Git identity:** config per-repo local theo `setup.md`. Username/email là dữ liệu của user — PHẢI hỏi user để lấy giá trị, không hardcode hay suy đoán.
