@@ -12,11 +12,29 @@ Mỗi thư mục con là một git repo độc lập của tài khoản GitHub `
 [setup.md](setup.md). LUÔN đọc `setup.md` trước khi clone, tạo repo,
 hoặc tham chiếu đường dẫn — không đoán layout từ trí nhớ phiên chat.
 
+## Ràng buộc thiết kế — đọc TRƯỚC khi đề xuất bất kỳ phương án nào
+
+> Nguồn: `lab-docs/frameworks/design-principles.md` — **DECIDED 2026-10-27**, do user xác nhận sau một session mà agent liên tục đề xuất phương án work-around.
+
+Tóm tắt luật, không thay thế việc đọc file gốc:
+
+- **Không có áp lực thời gian.** Lab không deadline, không cần MVP chạy sớm. Cấm dùng "nhanh hơn / rẻ hơn / sau này sửa" làm lý do chính để vi phạm ranh giới. Thứ tự ưu tiên cố định: **đúng ranh giới → đúng dữ liệu → hiệu năng → số dòng code**.
+- **Mỗi service sở hữu dữ liệu của mình, tuyệt đối.** Không đọc D1 service khác, không tự đoán dữ liệu service khác (ví dụ Planning không giữ múi giờ — gọi `lab-user`), không nhét dữ liệu service khác vào vì "chỉ vài cột".
+- **Đồng bộ chéo service:** sự kiện bất đồng bộ (outbox) là ưu tiên 1; gọi đồng bộ là ưu tiên 2; cache/trùng lặp dữ liệu là ưu tiên cuối và phải chứng minh bằng số đo.
+- **DEFERRED không phải lý do để né thiết kế.** Queues DEFERRED không có nghĩa là tránh event/outbox — outbox làm được bằng bảng + cron.
+- **Cấm từ vựng trung gian** trong vai trò biện minh: "workaround", "tạm thời", "cho chạy được", "MVP thôi mà", "phá ranh giới một chút cũng không sao", "đỡ tốn một chặng gọi", "đơn giản hơn cho quy mô này" (trừ khi đã đo).
+- **Index phải trả giá bằng ngân sách ghi.** Hạn mức D1 Free: 5.000.000 read / 100.000 write mỗi ngày = **tỉ lệ 50:1**, nên mỗi index quy đổi ra ngân sách đọc gấp 50 lần. Chỉ tạo index cho ràng buộc `UNIQUE`, khóa ngoại, hoặc truy vấn đã biết cụ thể. Cấm index "chuẩn bị trước". Index trùng cột đầu với index khác là index thừa. Thêm index phải kèm câu SQL + `EXPLAIN QUERY PLAN` + `rows_read` trước/sau.
+- **`db-schema.md` dạng bảng, mỗi dòng một lý do.** Mỗi bảng dữ liệu là markdown table `Cột | Kiểu | Ràng buộc | Vì sao có`; mỗi bảng index là `Index | Cột | Phục vụ`. Cột lý do viết **một dòng**. Cấm: DDL thay cho bảng, văn xuôi giải thích, bảng so sánh phương án, "quyết định ngày X" (thuộc decision-ledger), giải thích business rule (thuộc product brief), tường thuật quá trình chọn. Mục tiêu: đọc vài phút hiểu hết, không phải mở code.
+- **Mọi phương án phải nêu đánh đổi thật:** chi phí đặt vào đâu, sai thế nào khi sự cố, chặn gì về sau. Không ngầm thiên vị phương án rẻ nhất bằng cách mô tả nó tích cực hơn.
+- **DECIDED chỉ đến từ user.** Agent không tự nâng trạng thái, không gộp nhiều câu hỏi rồi coi một câu trả lời là chốt tất cả.
+- **Đi từng bước với người dùng.** Dừng lại sau mỗi quyết định lớn, hỏi, ghi nhận, rồi mới đi tiếp. Mục tiêu là user hiểu và đồng ý từng bước, không phải có file hoàn chỉnh.
+
 ## Source of truth
 
 | Nội dung | Nơi tham chiếu |
 |---|---|
 | Quyết định product & kiến trúc | `lab-docs/README.md`, `lab-docs/decisions/decision-ledger.md` |
+| **Ràng buộc thiết kế (bắt buộc)** | `lab-docs/frameworks/design-principles.md` |
 | Kiến trúc hệ thống | `lab-docs/architecture/system-overview.md` |
 | Kiến trúc backend (layering, test, deploy) | `lab-docs/architecture/backend.md` |
 | Mẫu code tham chiếu backend (copy được) | `lab-docs/architecture/backend-reference.md` |
@@ -113,6 +131,7 @@ Mọi file theo dõi trong `lab-docs` có frontmatter `id/type/status/repos/pare
 
 > Mục này đánh số riêng, **không** nối tiếp luật cứng ở trên. Khi tài liệu khác dẫn "luật 17–30" thì đó là luật cứng frontend, không phải mục ở đây.
 
+0. **Trước khi đề xuất phương án: đọc `lab-docs/frameworks/design-principles.md`.** Vi phạm các luật ở đó là **bug**, không phải khác quan điểm. Cụ thể: không đề xuất work-around, không dựng ràng buộc thời gian không có thật, không phá ranh giới sở hữu dữ liệu để "cho chạy được".
 1. **Status vocabulary:** chỉ có DECIDED là ràng buộc. PROPOSED/ASSUMED/DEFERRED/OPEN/OUT OF SCOPE không được tự nâng cấp thành DECIDED.
 2. **Workflow:** BRAINSTORM → Product Brief → BREAKDOWN → Spec/Code. Chỉ tạo Spec/Plan/Code khi user yêu cầu rõ ràng.
 3. **Cloudflare:** backend multi-repo, mỗi service là một Worker + D1 riêng, private, gọi nhau qua Service Bindings. API Gateway là public entry duy nhất. KHÔNG tự thêm KV, Queues, Durable Objects, Redis — các mục này DEFERRED.
@@ -133,7 +152,7 @@ Mọi file theo dõi trong `lab-docs` có frontmatter `id/type/status/repos/pare
 ## Đọc tài liệu trước khi code
 
 Trước khi làm việc với bất kỳ service hay frontend nào:
-1. Đọc `lab-docs/README.md` và `lab-docs/decisions/decision-ledger.md`.
+1. Đọc `lab-docs/README.md`, `lab-docs/frameworks/design-principles.md` và `lab-docs/decisions/decision-ledger.md`.
 2. Đọc tài liệu kiến trúc liên quan (bảng ở trên).
 3. Nếu làm UI: đọc `lab-docs/architecture/frontend.md` và tham chiếu prototype trong `lab-prototype/`.
 
