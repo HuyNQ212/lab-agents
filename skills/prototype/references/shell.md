@@ -69,6 +69,20 @@ Các `id` dưới đây là **hợp đồng ổn định**. Trang và script đ�
 | `.anchor` | Wrapper `position: relative` để neo `.popover` / `.menu` |
 | `.main` | `<main>` của trang; padding do shell quy định |
 
+**Cuộn:** sidebar cao đúng viewport và tự cuộn bên trong (`position: sticky`), nên khối
+user/đăng xuất luôn nằm trong màn hình; chỉ `.main` cuộn theo trang. Trang **không** được
+đặt `position: fixed` hay `height: 100vh` lên `.sidebar`, và không tự dựng lại cột trái.
+
+**Chân sidebar:** một hàng duy nhất gồm thông tin user co giãn và nút đăng xuất **chỉ icon**
+(`aria-label="Đăng xuất"`, `title="Đăng xuất"`). Không xếp đăng xuất thành dòng thứ hai —
+chân sidebar chiếm thêm chiều cao mà không thêm thông tin.
+
+**Cache:** `python -m http.server` gửi `Last-Modified` và trình duyệt sẽ dùng bản cache, nên
+sửa `shared/*.js|css` **không** tự hiện ở tab đang mở. Sau khi sửa shell, hard-refresh
+(Ctrl+F5) trước khi kết luận; báo user hard-refresh nếu họ đang mở tab từ trước. Trạng thái
+lai (markup mới + CSS cũ hoặc ngược lại) là lỗi thật — `shots.mjs` không thấy vì luôn mở
+context sạch.
+
 ## API `Workspace`
 
 | API | Dùng để |

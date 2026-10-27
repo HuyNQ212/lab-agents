@@ -45,6 +45,18 @@ Không phê cả 18 ảnh mỗi vòng — tốn và loãng. Chọn theo thứ t�
 
 ### 3. Prompt cho sub-agent
 
+**Hợp đồng spawn — không thương lượng.** Review ảnh là việc bounded; mọi thứ dưới đây
+đều là ràng buộc cứng, không phải gợi ý:
+
+| Ràng buộc | Giá trị | Vì sao |
+|---|---|---|
+| Loại agent | `Explore`/`Ask` (read-only) | Agent full-tool sẽ đi grep/đọc source/chạy script — đúng thứ bị cấm, và là lý do một việc 30 giây phình thành 13 phút |
+| Số ảnh | **2–3**, chọn theo bước 2 | Ảnh full-res là token đắt nhất; 6 ảnh làm loãng phán đoán |
+| Chạy | **Foreground**, chờ trong cùng lượt | Không bàn giao "đang chờ" cho user; agent nền kẹt thì không ai biết |
+| Ngân sách | **~2 phút**. Quá 2 phút hoặc thấy nó gọi tool ngoài `Read` → dừng ngay (`TaskStop`), tự phê bằng mắt | Việc bounded mà chạy dài = đã lạc scope; kéo dài không làm kết quả tốt hơn |
+
+Nếu vì bất kỳ lý do gì phải dùng agent khác `Explore`, nêu rõ lý do với user **trước khi** spawn.
+
 Giao đúng ngần này, không giao thêm:
 
 ```text
@@ -53,12 +65,16 @@ Bạn review một UX prototype HTML (không phải production code).
 Ảnh: <liệt kê đường dẫn ảnh>
 Checklist: .agents/skills/prototype/references/checklist.md — đọc mục B (mục A do script lo)
 
-Chỉ ra tối đa 5 lỗi thực sự, xếp theo mức nghiêm trọng. Với mỗi lỗi:
-- Luật nào trong checklist (mã B…)
+Chỉ ra tối đa 5 lỗi thực sự, xếp theo mức nghiêm trọng. Mỗi lỗi ghi:
+- Mã luật nếu khớp (B…), **hoặc** `FREE:` nếu là lỗi thật mà checklist chưa có luật
 - Ảnh nào
 - Mô tả cụ thể cái gì sai (không nói "trông không ổn")
 
-Không khen. Không đề xuất thêm tính năng. Không nhận xét code.
+Được phép có tối đa 3 finding `FREE:` — checklist là danh sách mở, đừng ép quan sát vào mã
+có sẵn và đừng bỏ qua vì "không có luật". Ví dụ FREE hợp lệ: chữ tràn/cắt trong control,
+khoảng cách làm hai cột lệch, một chi tiết trông rẻ tiền so với phần còn lại.
+
+Không khen. Không đề xuất thêm tính năng. Không nhận xét code. Chỉ dùng Read để xem ảnh; không đọc file HTML/CSS/JS, không chạy lệnh.
 Nếu không có lỗi thật, nói "không có lỗi" — đừng bịa cho đủ 5.
 ```
 
@@ -76,8 +92,15 @@ Chỉ sửa ACCEPT. Không sửa REJECT vì "thấy cũng hợp lý" — đó l�
 
 ### 5. Sửa, chụp lại, dừng
 
-Sửa → `shots` lại → nhìn ảnh đã sửa. Không cần sub-agent cho mọi lần; một vòng
-sub-agent cho mỗi 2–3 lần sửa là đủ.
+Sửa → `shots` lại → nhìn ảnh đã sửa. **Kiểm bằng dữ liệu trước khi tin finding:** finding
+gắn mã phải đối chiếu số đo (đo pixel, đếm DOM) — reviewer đọc ảnh có thể sai về tỷ lệ thanh,
+nhầm ảnh có/không có. Không cần sub-agent cho mọi lần; một vòng sub-agent cho mỗi 2–3 lần sửa.
+
+**Sửa `shared/` thì phải kiểm lại bằng browser thật.** `shots.mjs` mở context mới nên luôn
+thấy bản cuối; tab của user thì không. Sau khi đổi `shared/shell.{js,css}`, mở trang bằng
+Playwright, đọc `getComputedStyle` + `textContent` của control vừa sửa, và nếu đổi markup
+icon-only thì xác nhận `textContent === ''`. Kèm cache-busting `?v=<hash>` khi nhúng
+`shared/` nếu cần, hoặc nhắc user hard-refresh trước khi kết luận là xong.
 
 **Trần 3 vòng sub-agent.** Hết 3 vòng còn lỗi lớn → dừng, báo user kèm danh sách
 lỗi chưa giải và lý do. Không tự lặp tiếp: vòng lặp mở là thứ Lab cấm ở mọi
@@ -97,6 +120,18 @@ bằng đọc code:
 Cái thứ ba đặc biệt đáng nhớ: nó là lỗi **chỉ** nhìn ảnh mới thấy. Code đọc lên
 hoàn toàn đúng — `::after` có `position:absolute` với `z-index:-1`, hợp lệ. Nhưng
 `isolation: isolate` không cắt tràn, phải có `overflow: hidden`.
+
+## Lỗi mà cơ chế này ĐÃ BỎ SÓT — và vì sao
+
+| Lỗi | Ai phát hiện | Root cause |
+|---|---|---|
+| Nhãn "Đăng xuất" bị nhồi vào nút ép 36×36, chữ vỡ hai dòng; hover cũng xấu | **User**, sau khi tự sửa xong | Reviewer bị buộc gắn mã B…; checklist không có luật nào cho text tràn trong control. Trạng thái lai (markup cũ + CSS mới) chỉ tồn tại trong tab **cache** của user, `shots.mjs` không bao giờ thấy |
+
+Hai sửa đã vào vì lỗi này: (1) checklist thành **danh sách mở** — reviewer được ghi `FREE:`
+khi không khớp mã; (2) bước 5 bắt buộc kiểm `shared/` bằng browser thật sau khi sửa.
+
+Bài học chung: taxonomy sinh từ lỗi quá khứ chỉ bắt được lỗi quá khứ. Khi một control
+được sửa cả markup lẫn CSS, phải xem **kết quả render**, không phải diff.
 
 ## Trạng thái để chụp ảnh
 

@@ -82,13 +82,17 @@ FAIL thì **sửa**, không được bỏ qua. Bảy luật L1–L7 trong script
 ### 5. Vòng tự phê bằng ảnh — qua sub-agent
 
 ```bash
-node .agents/scripts/shots.mjs                    # 18 ảnh, desktop + mobile, mọi trạng thái
+node .agents/scripts/shots.mjs                    # ảnh desktop + mobile, mọi trạng thái
 node .agents/scripts/shots.mjs --only planning --width 390
 ```
 
-Sau đó **spawn một sub-agent context sạch** để phê, không tự đọc lại file mình vừa viết. Sub-agent chỉ nhận: danh sách ảnh + `references/checklist.md` + câu hỏi "cái gì sai". Main agent triage ACCEPT/REJECT. Chi tiết ở `references/critique-loop.md`.
+Sau đó **spawn một sub-agent context sạch** để phê, không tự đọc lại file mình vừa viết. Sub-agent chỉ nhận: 2–3 ảnh ưu tiên + `references/checklist.md` + câu hỏi "cái gì sai". Main agent triage ACCEPT/REJECT.
 
-Sửa xong chạy lại `shots`. **Trần 3 vòng.** Hết 3 vòng vẫn còn lỗi lớn thì dừng và báo user, không tự lặp tiếp.
+**Bắt buộc:** agent `Explore`/`Ask` (read-only), chạy **foreground** và chờ trong cùng lượt, ngân sách ~2 phút — quá thì `TaskStop` và tự phê. Không giao agent full-tool, không giao 6 ảnh, không bàn giao "đang chờ" cho user. Lý do và bảng ràng buộc ở `references/critique-loop.md` §3.
+
+**Checklist là danh sách mở, không phải khuôn.** Reviewer được ghi `FREE:` (tối đa 3 finding) cho lỗi thật không khớp mã B… nào — UI/UX không ép hết vào taxonomy sinh từ lỗi cũ. Triage `FREE:` như finding thường, nhưng **kiểm bằng dữ liệu** (đo pixel, đọc DOM) trước khi ACCEPT.
+
+Sửa xong chạy lại `shots`. **Sửa `shared/` thì mở Playwright kiểm render thật** (computed style + `textContent`), vì `shots.mjs` dùng context sạch còn tab của user thì cache — trạng thái lai chỉ hiện ở phía user. **Trần 3 vòng.** Hết 3 vòng vẫn còn lỗi lớn thì dừng và báo user, không tự lặp tiếp.
 
 ### 6. Cập nhật manifest + bàn giao
 

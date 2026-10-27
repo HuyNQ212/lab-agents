@@ -10,6 +10,13 @@
 Chia hai nhóm. Nhóm **[máy]** không cần agent phán đoán — chạy `lint-prototype.mjs`.
 Nhóm **[mắt]** chỉ kiểm được bằng ảnh, và phải do sub-agent context sạch phê.
 
+**Checklist này KHÔNG phải danh sách đóng.** Nó sinh ra từ lỗi đã xảy ra, nên chỉ bắt được
+loại lỗi đã từng gặp — lỗi mới luôn lọt. Vì vậy reviewer **được phép** (và phải) báo lỗi
+không khớp mã nào: ghi `FREE:` thay cho mã B…, mô tả cái nhìn thấy và vì sao nó xấu. Tối đa
+3 finding `FREE:` mỗi vòng; chúng xếp **ngang hàng** với finding có mã, không phải phụ lục.
+Lý do: gò mọi quan sát vào khuôn mã khiến reviewer bỏ qua lỗi thật (chữ tràn trong nút 36px
+đã lọt đúng như vậy) hoặc bịa finding cho khớp mã.
+
 ## A. Máy kiểm được
 
 | # | Luật | Vì sao |
@@ -35,6 +42,9 @@ Nhóm **[mắt]** chỉ kiểm được bằng ảnh, và phải do sub-agent co
 | B4 | Menu "..." đặt ở header vùng chi tiết, không nhồi vào thẻ danh sách | Nút lồng trong nút = lỗi a11y + bấm nhầm |
 | B5 | Thứ tự danh sách là **kỳ gần nhất trước** | Người dùng mở app để biết sắp tới cái gì |
 | B6 | Không có mục "Sắp tới" chứa ngày đã qua | Lỗi đã thật sự xảy ra: thẻ ghi "đã qua 36 ngày" nằm trong "SẮP TỚI" |
+| B28 | Không có chữ tràn, bị cắt, hay xuống dòng bên trong control (nút, chip, nav-item, menu) ở cả 1280 và 390 | Lỗi đã thật sự xảy ra: nhãn "Đăng xuất" bị nhồi vào `.nav-item` ép 36×36 → chữ vỡ thành hai dòng, trông như control hỏng |
+| B29 | Icon-only button phải là **chỉ icon** — không còn text node nào bên trong | Sửa CSS mà quên sửa markup sinh ra đúng trạng thái lai: hộp nhỏ + chữ cũ |
+| B30 | Hit target ≥ 36×36 (mobile ≥ 44×44); hover đổi màu nền, không đổi kích thước hay bố cục | Nút nhỏ hơn ngón tay = bấm sai; hover làm nhảy layout = cảm giác rung |
 
 ### Chữ
 
