@@ -21,7 +21,7 @@ Prototype là **hợp đồng tham khảo UX**, không phải production code. G
 ## Vị trí trong chuỗi
 
 ```text
-grilling → [prototype] → breakdown → to-spec → architecture-review → implement → ship
+grilling → [prototype] → breakdown → architecture-design → to-spec → spec-review → implement → ship
 ```
 
 Prototype là **tùy chọn** và đứng trước breakdown: khi hành vi UI đã duyệt thì `delivery-breakdown` được phép tham chiếu prototype thay vì tự đoán giao diện.

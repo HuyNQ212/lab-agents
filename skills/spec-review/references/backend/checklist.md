@@ -1,6 +1,8 @@
-# Checklist — architecture-review, nhánh BACKEND
+# Checklist — spec-review (Pass 2), nhánh BACKEND
 
 > Bộ câu hỏi phản biện. Không phải nguồn luật: ràng buộc nằm ở `lab-docs/architecture/backend.md` §10 và `decision-ledger.md`.
+> Dùng ở **Pass 2** của `spec-review`. Trục 1 (Boundary), 2 (Data ownership) và phần schema của trục 6 đã có quyết định trong Design Record → **đối chiếu ở Pass 1** (`references/conformance.md`); ở đây chỉ dùng như lưới an toàn khi Design Record chưa phủ, hoặc khi spec mâu thuẫn với chính nó.
+> `implement` cũng dùng file này làm tiêu chí review diff.
 > Mỗi mục: câu hỏi → dấu hiệu vi phạm → mức mặc định.
 
 ## 1. Boundary — dữ liệu thuộc Worker nào

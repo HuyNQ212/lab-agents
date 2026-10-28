@@ -10,6 +10,8 @@
 **Stories:** <PLN-001, PLN-002>
 **Services:** <`lab-planning` (owner)>
 **Nguồn:** <stories.md, db-schema.md, decision-ledger — ngày đọc>
+**Design Record:** <design-backend.md — FROZEN, kèm nhật ký delta đã đọc>
+**Truy vết:** mỗi bảng/cột/endpoint/binding/file trong spec ghi `Theo: <ID Design Record>` (OWN/INV/SYNC/FILE/D…). Phần tử không có ID để dẫn = quyết định thiết kế chưa có → dừng, quay `architecture-design`.
 **Spec version:** 1
 
 ## 1. Scope

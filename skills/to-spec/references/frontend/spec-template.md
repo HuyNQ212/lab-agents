@@ -10,6 +10,8 @@
 **Stories:** <STORY-ID>
 **Repo:** `apps/lab-portal`
 **Nguồn:** <stories.md, backend spec, decision-ledger — ngày đọc>
+**Design Record:** <design-frontend.md — FROZEN, kèm nhật ký delta đã đọc>
+**Truy vết:** mỗi route/component/state/query key/file trong spec ghi `Theo: <ID Design Record>`. Phần tử không có ID để dẫn = quyết định thiết kế chưa có → dừng, quay `architecture-design`.
 **Spec version:** 1
 
 > **Nhắc trước khi viết:** user **không đọc code frontend**, chỉ review giao diện. Spec này phải đủ để agent implement mà không đoán, và đủ để máy kiểm chứng — vì sẽ không có người đọc code để phát hiện sai.

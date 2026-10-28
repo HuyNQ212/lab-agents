@@ -6,8 +6,10 @@
 ## Chuỗi
 
 ```text
-grilling → prototype → breakdown → to-spec → architecture-review → implement → ship → production
+grilling → prototype → breakdown → architecture-design → to-spec → spec-review → implement → ship → production
 ```
+
+`architecture-design` là bước **ngồi cùng user** chốt quyết định khó đảo ngược (schema, ranh giới service, tách module/component FE, state ownership) cho một **cụm** story/epic; ra Design Record đã duyệt. Story nhỏ nằm gọn trong thiết kế đã có đi luồng LITE (một gate). `to-spec` chỉ chuyển Design Record thành spec; `spec-review` kiểm spec có bám Design Record không và chỉ báo điểm lệch — xem `architecture-design/SKILL.md`, `spec-review/SKILL.md`.
 
 `grilling` đứng đầu: biến ý tưởng thô thành Product Brief (what/why). Hai mode bên trong (EXPLORE cho ý tưởng mơ hồ, GRILL cho decision frontier) với gate tự chuyển — xem `grilling/SKILL.md`.
 
@@ -37,7 +39,8 @@ Story chạm cả hai phía → hai spec (`spec-backend.md`, `spec-frontend.md`)
 | Skill | Trạng thái | File |
 |---|---|---|
 | `to-spec` | ✅ Đủ hai nhánh | `SKILL.md` + `references/backend/` + `references/frontend/` |
-| `architecture-review` | ✅ Đủ hai nhánh | `SKILL.md` + `references/backend/` + `references/frontend/` |
+| `architecture-design` | ✅ Đủ hai nhánh (mới, chưa chạy thực tế) | `SKILL.md` + `references/design-record-template.md` + `references/backend/layers.md` + `references/frontend/layers.md` |
+| `spec-review` | ✅ Đủ hai nhánh (đổi tên từ `architecture-review`) | `SKILL.md` + `references/conformance.md` + `references/backend/` + `references/frontend/` |
 | `implement` | ✅ Đủ hai nhánh | `SKILL.md` + `references/review-protocol.md` + `references/backend/` + `references/frontend/` |
 | `ship` | ✅ | `SKILL.md` + `references/plan-template.md` + `references/deploy-checklist.md` |
 | `capture` | ✅ | `SKILL.md` — xếp việc lộ ra vào story hoặc ticket nhỏ `SETUP-/MAINT-/EXP-` |
@@ -48,7 +51,7 @@ Story chạm cả hai phía → hai spec (`spec-backend.md`, `spec-frontend.md`)
 
 **Đã bỏ:** `code-review` — review + triage nằm trong `implement`.
 
-`to-html` là **tiện ích trình bày**, đứng ngoài chuỗi `grilling → breakdown → to-spec → architecture-review → implement → ship`. Nó không tạo quyết định, không sửa tài liệu nguồn.
+`to-html` là **tiện ích trình bày**, đứng ngoài chuỗi `grilling → breakdown → architecture-design → to-spec → spec-review → implement → ship`. Nó không tạo quyết định, không sửa tài liệu nguồn.
 
 ## File hiện có
 
@@ -59,7 +62,8 @@ Story chạm cả hai phía → hai spec (`spec-backend.md`, `spec-frontend.md`)
 | `breakdown` | `SKILL.md` |
 | `capture` | `SKILL.md` |
 | `to-spec` | `SKILL.md`<br>`references/backend/spec-template.md`<br>`references/frontend/spec-template.md` |
-| `architecture-review` | `SKILL.md`<br>`references/backend/checklist.md`<br>`references/frontend/checklist.md` |
+| `architecture-design` | `SKILL.md`<br>`references/design-record-template.md`<br>`references/backend/layers.md`<br>`references/frontend/layers.md` |
+| `spec-review` | `SKILL.md`<br>`references/conformance.md`<br>`references/backend/checklist.md`<br>`references/frontend/checklist.md` |
 | `implement` | `SKILL.md`<br>`references/review-protocol.md`<br>`references/backend/workflow.md`<br>`references/frontend/workflow.md` |
 | `ship` | `SKILL.md`<br>`references/plan-template.md`<br>`references/deploy-checklist.md` |
 | `to-html` | `SKILL.md`<br>`references/theme.css` |
@@ -73,8 +77,9 @@ Các file `references/spec-template.md` và `references/checklist.md` ở gốc 
 | Brainstorm ý tưởng → Product Brief | `grilling` | Không spec, không code |
 | Dựng UX prototype, tự phê, chờ duyệt | `prototype` | Tùy chọn; HTML-first; không thay spec |
 | Product Brief → Stories/AC | `breakdown` | Coverage audit bằng script; checkpoint user bắt buộc |
-| Viết spec | `to-spec` | Không code |
-| Phản biện spec/schema | `architecture-review` | Không sửa |
+| Chốt schema, ranh giới, tách module/component | `architecture-design` | Ngồi cùng user, từng gate; không spec, không code |
+| Viết spec | `to-spec` | Không code; không quyết thiết kế, truy vết về Design Record |
+| Kiểm spec bám Design Record + phản biện | `spec-review` | Không sửa; báo điểm lệch |
 | Code + test + review + commit | `implement` | Nhánh feature, **push lên nhánh** |
 | Gate + PR + merge + migration + deploy | `ship` | Thay CI/CD; có điểm dừng user |
 
@@ -99,7 +104,7 @@ node .agents/scripts/shots.mjs                   # ảnh mọi trang prototype, 
 - **Lưu trữ artifact theo** `lab-docs/frameworks/documentation-standards.md` — hai lớp: quyết định ở `lab-docs`, bằng chứng ở `<repo>/docs/delivery/<ID>/`, spec ở `specs/<ID>/`. Ticket nhỏ dùng `ticket.md` một trang với ID tiền tố `SETUP-/MAINT-/EXP-` (template trong `capture/SKILL.md`).
 - Mỗi skill một thư mục, `SKILL.md` bắt buộc; tài liệu dài để trong `references/<nhánh>/`.
 - `SKILL.md` chỉ chứa quyết định và luật; **không copy code** từ `backend-reference.md`.
-- Checklist review **không nhân bản**: `implement` trỏ tới `architecture-review/references/`.
+- Checklist review **không nhân bản**: `implement` trỏ tới `spec-review/references/`.
 - Frontmatter: `name`, `description`, `metadata.short-description`.
 - Skill không được tự nâng PROPOSED/DEFERRED/OPEN thành DECIDED.
 - **Skill chỉ cover một phía không được đánh dấu hoàn thành.**

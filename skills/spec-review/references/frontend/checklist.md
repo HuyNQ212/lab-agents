@@ -1,6 +1,8 @@
-# Checklist — architecture-review, nhánh FRONTEND
+# Checklist — spec-review (Pass 2), nhánh FRONTEND
 
 > Bộ câu hỏi phản biện thiết kế frontend **trước khi viết code**.
+> Dùng ở **Pass 2** của `spec-review`. Trục 2 (State ownership) và cấu trúc component/file đã có quyết định trong Design Record → **đối chiếu ở Pass 1** (`references/conformance.md`); ở đây chỉ dùng như lưới an toàn khi Design Record chưa phủ, hoặc spec mâu thuẫn với chính nó.
+> `implement` cũng dùng file này làm tiêu chí review diff.
 > Không phải nguồn luật: ràng buộc nằm ở `lab-docs/architecture/frontend.md` §0/§5/§6 và `.agents/AGENTS.md` luật 17–30.
 > Mỗi mục: câu hỏi → dấu hiệu vi phạm → mức mặc định.
 

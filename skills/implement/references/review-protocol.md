@@ -1,7 +1,7 @@
 # Review protocol — bắt buộc cho mọi ticket
 
 > Dùng ở bước 4 của `implement`. Áp cho cả backend và frontend.
-> Checklist chấm điểm nằm ở `architecture-review/references/<backend|frontend>/checklist.md` — **không nhân bản** ở đây.
+> Checklist chấm điểm nằm ở `spec-review/references/<backend|frontend>/checklist.md` — **không nhân bản** ở đây.
 
 ## Vấn đề phải giải
 
@@ -32,7 +32,7 @@ Thiếu dòng 1 → bước review là diễn. Thiếu dòng 3 → reviewer "s�
 ## Prompt mẫu — backend
 
 ```text
-Review diff dưới đây theo checklist: .agents/skills/architecture-review/references/backend/checklist.md
+Review diff dưới đây theo checklist: .agents/skills/spec-review/references/backend/checklist.md
 
 Ràng buộc áp dụng: lab-docs/architecture/backend.md §10 và .agents/AGENTS.md luật 1–16.
 
@@ -51,7 +51,7 @@ Kết thúc bằng verdict PASS / NEEDS WORK / BLOCK.
 
 ```text
 Review diff và ảnh Storybook dưới đây theo checklist:
-.agents/skills/architecture-review/references/frontend/checklist.md
+.agents/skills/spec-review/references/frontend/checklist.md
 
 Ràng buộc: lab-docs/architecture/frontend.md §5–§6 và .agents/AGENTS.md luật 17–30.
 

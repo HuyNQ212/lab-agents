@@ -88,7 +88,7 @@ Ghi lại, không chỉ "đã chạy":
 
 ## Prompt review backend
 
-Xem `references/review-protocol.md` §"Prompt mẫu — backend". Reviewer dùng checklist `architecture-review/references/backend/checklist.md`.
+Xem `references/review-protocol.md` §"Prompt mẫu — backend". Reviewer dùng checklist `spec-review/references/backend/checklist.md`.
 
 ## Dừng và báo user khi
 

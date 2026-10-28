@@ -111,7 +111,7 @@ Bốn câu này kiểm được **từ ảnh**, và mỗi câu tương ứng m�
 
 Xem `references/review-protocol.md` §"Prompt mẫu — frontend". Điểm bắt buộc: **truyền đường dẫn ảnh** cho reviewer. Reviewer chỉ đọc diff text sẽ bỏ qua toàn bộ trục giao diện.
 
-Checklist: `architecture-review/references/frontend/checklist.md`.
+Checklist: `spec-review/references/frontend/checklist.md`.
 
 ## Dừng và báo user khi
 

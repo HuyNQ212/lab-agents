@@ -7,7 +7,7 @@ metadata:
 
 # grilling — Brainstorm tới Product Brief
 
-Đầu vào của chuỗi skill (`grilling → to-spec → architecture-review → implement → ship`) là **stories**, mà stories đến từ Product Brief. Skill này là **mảnh đầu chuỗi**: biến ý tưởng thô thành Product Brief đủ tốt để `to-spec` làm việc.
+Đầu vào của chuỗi skill (`grilling → architecture-design → to-spec → spec-review → implement → ship`) là **stories**, mà stories đến từ Product Brief. Skill này là **mảnh đầu chuỗi**: biến ý tưởng thô thành Product Brief đủ tốt để `to-spec` làm việc.
 
 Phương pháp chi tiết **không nằm ở đây** — đọc `lab-docs/frameworks/product-grilling.md` (decision tree, frontier questioning, evidence policy, anti-overengineering). SKILL.md chỉ chứa quyết định và luật vận hành local.
 

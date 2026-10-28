@@ -7,7 +7,7 @@ metadata:
 
 # breakdown — Product Brief thành Stories
 
-Chuỗi: `grilling → **breakdown** → to-spec → architecture-review → implement → ship`. Grilling chốt *what/why* (Product Brief); skill này phân rã *behavior* (stories + AC). KHÔNG đụng thiết kế kỹ thuật — đó là việc của `to-spec`.
+Chuỗi: `grilling → **breakdown** → architecture-design → to-spec → spec-review → implement → ship`. Grilling chốt *what/why* (Product Brief); skill này phân rã *behavior* (stories + AC). KHÔNG đụng thiết kế kỹ thuật — đó là việc của `architecture-design` (quyết định) rồi `to-spec` (spec).
 
 Phương pháp chi tiết đọc `lab-docs/frameworks/delivery-breakdown.md`. SKILL.md chỉ chứa luật vận hành và điểm neo với script.
 

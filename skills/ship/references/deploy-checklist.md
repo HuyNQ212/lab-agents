@@ -5,7 +5,7 @@
 
 ## Vì sao review ở đây quan trọng nhất trong toàn chuỗi
 
-`to-spec` và `architecture-review` review artifact mà sai thì sửa rẻ. `implement` commit mà sai thì sửa bằng commit mới. **`ship` plan mà sai thì hậu quả đi thẳng vào production D1 và Worker đang chạy** — migration forward-only, không rollback thật.
+`architecture-design`, `to-spec` và `spec-review` review artifact mà sai thì sửa rẻ. `implement` commit mà sai thì sửa bằng commit mới. **`ship` plan mà sai thì hậu quả đi thẳng vào production D1 và Worker đang chạy** — migration forward-only, không rollback thật.
 
 Vì vậy reviewer ở đây phải chấm chặt hơn, và câu hỏi phải là "nếu bước này hỏng thì trạng thái là gì", không phải "bước này có hợp lý không".
 
@@ -85,7 +85,7 @@ Trục rủi ro cao nhất. Chấm chặt.
 
 ## Output của reviewer
 
-Giống `architecture-review`, dùng cùng thang mức:
+Giống `spec-review`, dùng cùng thang mức:
 
 ```markdown
 ## Verdict: NEEDS WORK

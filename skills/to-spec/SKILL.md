@@ -27,7 +27,8 @@ Story chạm cả hai phía → viết **hai spec**, đặt cạnh nhau trong c�
 | Behavior, AC | đọc và ánh xạ, không viết lại | `delivery-breakdown` |
 | Quyết định công nghệ | trích từ `decision-ledger` | user |
 | Code, migration file, component | không tạo | `implement-backend` / `implement-frontend` |
-| Phản biện boundary/schema/UX | nêu câu hỏi, không tự chốt | `architecture-review` |
+| Quyết định schema, ranh giới service, tách module/component, state ownership | **đọc từ Design Record, không quyết** | `architecture-design` |
+| Kiểm spec bám Design Record, phản biện failure/AuthZ/UX | nêu câu hỏi, không tự chốt | `spec-review` |
 
 Không tạo GitHub Issue. Không đánh số lại story ID. Không nâng PROPOSED/DEFERRED/OPEN thành DECIDED.
 
@@ -35,6 +36,7 @@ Không tạo GitHub Issue. Không đánh số lại story ID. Không nâng PROPO
 
 ### Chung
 
+0. **Design Record FROZEN** của cụm: `lab-docs/products/<product>/design-backend.md` và/hoặc `design-frontend.md` (hoặc `lab-docs/platform/<cap>/`), kèm nhật ký delta. **Bắt buộc, đọc trước hết.** Spec là chuyển Design Record thành hợp đồng cho agent implement — **không phải nơi quyết định thiết kế**.
 1. `lab-docs/products/<product>/stories.md` hoặc `lab-docs/platform/<cap>/stories.md` — story, AC, DEFERRED/OPEN.
 2. `lab-docs/decisions/decision-ledger.md` — chỉ dòng DECIDED là ràng buộc.
 3. `lab-docs/frameworks/engineering-workflow.md` §2 — định nghĩa nội dung spec.
@@ -74,8 +76,10 @@ Dừng và báo user, không tự lấp:
 
 **Chung**
 - Story còn DRAFT hoặc AC mâu thuẫn nhau.
+- **Không có Design Record FROZEN phủ story** (chưa có, còn DRAFT, hoặc không phủ phần story cần).
+- Spec cần một quyết định mà Design Record không có: cơ chế, cấu trúc file, state, ranh giới, cột/bảng. **Không tự quyết, không tạo workaround để "cho spec đủ".**
 
-Với schema thiếu: đề xuất một phiên thiết kế schema (output là `db-schema.md`, đi qua `architecture-review`), rồi quay lại `to-spec`. Không viết spec dựa trên schema tự đoán.
+Gặp các blocker thiết kế (Design Record thiếu, schema thiếu, quyết định chưa có): đề xuất chạy **`architecture-design`** — FULL nếu thuộc cụm mới, LITE nếu chỉ thêm delta nhỏ — rồi quay lại `to-spec`. Không viết spec dựa trên thiết kế tự đoán.
 
 ## Quy trình
 
@@ -94,6 +98,13 @@ Trình bày ngắn: story nào, nhánh nào, service/route nào, delta ước t�
 ### 3. DRAFT SPEC
 
 Dùng template của **đúng nhánh**. Mọi mục phải có nội dung hoặc ghi "Không áp dụng — <lý do>".
+
+**Truy vết bắt buộc:** mỗi bảng/cột/endpoint/binding/state/file/component trong spec ghi ID Design Record mà nó thực hiện (`Theo: OWN2`, `INV1`, `FILE3`, `D4`…). Phần tử không có ID để dẫn → **dừng**, đó là quyết định thiết kế chưa có, không phải chi tiết spec.
+- Cây file/module trong spec **chép theo** cây file đích của Design Record, không tự tách lại.
+- Mỗi `core` của Design Record phải xuất hiện ở ít nhất một ticket (invariant: kèm test kiểm bằng máy đã chọn).
+- Phần `REMOVED` ở G4 không xuất hiện trong spec.
+- Cần đổi một quyết định? Không sửa trong spec — quay về `architecture-design` (LITE delta) rồi tiếp.
+- `spec-review` sẽ đối chiếu spec với Design Record; chỗ nào không truy vết được sẽ bị báo.
 
 ### 4. REVIEW
 
