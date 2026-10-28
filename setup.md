@@ -21,6 +21,7 @@
 | `HuyNQ212/lab-identity` | `services/lab-identity/` | Identity Worker + D1 |
 | `HuyNQ212/lab-planning` | `services/lab-planning/` | Planning Worker + D1 |
 | `HuyNQ212/lab-notification` | `services/lab-notification/` | Notification Worker + D1 |
+| `HuyNQ212/lab-user` | `services/lab-user/` | User Worker + D1 |
 | `HuyNQ212/lab-portal` | `apps/lab-portal/` | Frontend React + TypeScript + Vite |
 
 ## Lệnh clone
@@ -37,6 +38,7 @@ gh repo clone HuyNQ212/lab-gateway services/lab-gateway
 gh repo clone HuyNQ212/lab-identity services/lab-identity
 gh repo clone HuyNQ212/lab-planning services/lab-planning
 gh repo clone HuyNQ212/lab-notification services/lab-notification
+gh repo clone HuyNQ212/lab-user services/lab-user
 
 # Frontend (khi repo tồn tại)
 gh repo clone HuyNQ212/lab-portal apps/lab-portal
@@ -67,7 +69,8 @@ personal-lab/
 │   ├── lab-gateway/
 │   ├── lab-identity/
 │   ├── lab-planning/
-│   └── lab-notification/
+│   ├── lab-notification/
+│   └── lab-user/
 └── apps/
     └── lab-portal/
 ```
