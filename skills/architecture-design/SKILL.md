@@ -59,7 +59,7 @@ Agent tự chọn theo bảng, ghi lý do vào dòng `**Luồng:**` của Design
 2. **Tự kiểm (G4).** Chạy checklist cuối file; liệt kê mọi phần tử `mở rộng` gom theo chủ đề (không đưa 40 dòng rời). Agent không đề xuất gọt vì "đơn giản hơn/nhanh hơn" (L1, L5).
 3. **Gói quyết định** (một gói cho cả hai nhánh của cụm). Câu hỏi gồm, theo thứ tự: quyết định khó đảo ngược nhất của từng lớp · chỗ vướng · nhóm `mở rộng` để gọt (giữ là đề xuất mặc định) · OPEN chặn. Mục 0 của Design Record ghi liên kết gói và bảng `Q<n> → ID`.
 4. **Ghi câu trả lời.** Câu được trả lời → `DECIDED <yyyy-mm-dd>` vào cột Trạng thái của dòng tương ứng; phần tử bị gọt → `REMOVED <yyyy-mm-dd>` (giữ dòng). Cập nhật `db-schema.md` và sơ đồ theo, chạy lại kiểm sơ đồ ↔ bảng. Câu trả lời sinh câu hỏi mới → gói thứ hai chỉ chứa các câu đó.
-5. **Đóng băng.** Dòng 3 đổi thành `**Status:** FROZEN (user duyệt <yyyy-mm-dd>)` khi đủ cả ba: user đã duyệt gói; không còn quyết định `core` nào `PROPOSED`; mọi dòng OPEN có trạng thái `ĐÓNG <ngày>` hoặc ghi rõ thuộc Design Record khác. Thiếu một điều → giữ `DRAFT`, cập nhật cùng trang gói để nhắc đúng các câu còn chặn.
+5. **Đóng băng.** Dòng 3 đổi thành `**Status:** FROZEN (user duyệt <yyyy-mm-dd>)` khi đủ cả ba: user đã duyệt gói; không còn quyết định `core` nào `PROPOSED`; mọi dòng OPEN có trạng thái `ĐÓNG <ngày>` hoặc ghi rõ thuộc Design Record khác — kiểm bằng `lab design-check <ID>` (exit 1 khi Design Record FROZEN còn OPEN chặn; `lab gate to-spec` cũng gọi kiểm này). Thiếu một điều → giữ `DRAFT`, cập nhật cùng trang gói để nhắc đúng các câu còn chặn.
 
 ## Luồng LITE
 

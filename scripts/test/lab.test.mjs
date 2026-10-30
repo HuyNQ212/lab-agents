@@ -1,4 +1,4 @@
-// Test hồi quy cho lab.mjs trên fixture lab-docs nhỏ. Chạy: node --test .agents/scripts/test/
+// Test hồi quy cho lab.mjs trên fixture lab-docs nhỏ. Chạy: node --test --test-reporter=spec .agents/scripts/test/lab.test.mjs
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync } from "node:fs";
@@ -209,5 +209,71 @@ test("ship-mark ticket nhỏ ship riêng", () => {
   lab(root, "done", "SETUP-001");
   assert.equal(lab(root, "ship-mark", "SETUP-001", "SETUP-001-ship").code, 0);
   assert.match(read(root, "lab-docs/platform/setup/specs/SETUP-001/ticket.md"), /shipped: .* SETUP-001-ship/);
+  rmSync(root, { recursive: true });
+});
+
+const OPEN_HEAD = `## 8. OPEN\n\n| ID | Câu hỏi | Vì sao chặn | Ai quyết | Nếu sai |\n|---|---|---|---|---|\n`;
+const design = (status, rows) => `# Design\n\n**Status:** ${status}\n\n## 7. Khác\n\n${OPEN_HEAD}${rows.join("\n")}\n\n## 9. Nhật ký delta\n`;
+const CLOSED_ROWS = [
+  "| OPEN1 | **ĐÓNG 2026-10-29:** đã chốt, kiểu `string \| null` | — | xong | — |",
+  "| OPEN2 | ~~Đổi bảng~~ — đã rút | — | xong | — |",
+  "| OPEN3 | ĐÓNG 2026-10-27: Notification không có cron | — | xong | — |",
+  "| OPEN4 | **BỎ — không đáng kể** | — | — | — |",
+  "| OPEN5 | Queue cho account.created | thuộc Design Record của lab-user | user | — |",
+];
+
+test("design-check: FROZEN mọi OPEN đã đóng thì PASS; còn OPEN chặn thì FAIL và gate to-spec FAIL", () => {
+  let root = fixture({ "lab-docs/products/demo/design-backend.md": design("FROZEN (user duyệt 2026-10-29)", CLOSED_ROWS) });
+  let r = lab(root, "design-check", "DMO-001");
+  assert.equal(r.code, 0, r.out);
+  assert.match(r.out, /5\/5 đã đóng/);
+  assert.equal(lab(root, "gate", "to-spec", "DMO-001").code, 0);
+  rmSync(root, { recursive: true });
+
+  root = fixture({ "lab-docs/products/demo/design-backend.md": design("FROZEN (user duyệt 2026-10-29)", [...CLOSED_ROWS, "| OPEN6 | Phân trang cursor hay offset? | hiệu năng | user | — |"]) });
+  r = lab(root, "design-check", "DMO");
+  assert.equal(r.code, 1, r.out);
+  assert.match(r.out, /OPEN6: Phân trang/);
+  assert.doesNotMatch(r.out, /OPEN[1-5]:/);
+  r = lab(root, "gate", "to-spec", "DMO-E01");
+  assert.equal(r.code, 1, r.out);
+  assert.match(r.out, /còn 1 OPEN chặn chưa đóng \(OPEN6\)/);
+  rmSync(root, { recursive: true });
+});
+
+test("design-check: cột Trạng thái, nhãn mở rộng, DRAFT không FAIL, thư mục không có Design Record", () => {
+  const withState = `# D\n\n**Status:** FROZEN\n\n## 8. OPEN\n\n| ID | Câu hỏi | Vì sao chặn | Ai quyết | Nếu sai | Trạng thái |\n|---|---|---|---|---|---|\n| OPEN1 | a? | x | user | — | ĐÓNG 2026-10-30 — chốt A |\n| OPEN2 | b? | x | user | — | thuộc \`platform/user/design-backend.md\` |\n| OPEN3 | c? | mở rộng | user | — | MỞ |\n`;
+  let root = fixture({ "lab-docs/products/demo/design-backend.md": withState });
+  let r = lab(root, "design-check", "products/demo");
+  assert.equal(r.code, 0, r.out);
+  assert.match(r.out, /1 mở rộng còn mở/);
+  writeFileSync(join(root, "lab-docs/products/demo/design-backend.md"), withState.replace("| MỞ |", "| MỞ |\n| OPEN4 | d? | x | user | — | MỞ |"));
+  assert.equal(lab(root, "design-check", "DMO-001").code, 1);
+  writeFileSync(join(root, "lab-docs/products/demo/design-backend.md"), withState.replace("FROZEN", "DRAFT").replace("| MỞ |", "| MỞ |\n| OPEN4 | d? | x | user | — | MỞ |"));
+  r = lab(root, "design-check", "DMO-001");
+  assert.equal(r.code, 0, r.out);
+  assert.match(r.out, /chưa FROZEN/);
+  assert.equal(lab(root, "design-check", "SETUP-001").code, 1, "platform/setup không có Design Record");
+  rmSync(root, { recursive: true });
+});
+
+test("check: trích L-<nnn> phải có trong cột ID của ledger; ledger chưa có cột ID thì bỏ qua", () => {
+  const LEDGER = "lab-docs/decisions/decision-ledger.md";
+  const cite = { "lab-docs/products/demo/notes.md": "Theo L-002 và L-007.\n" };
+  let root = fixture({ ...cite, [LEDGER]: `# Ledger\n\n| Area | Decision | Status |\n|---|---|---|\n| Docs | a | DECIDED |\n` });
+  assert.equal(lab(root, "check").code, 0, "ledger trước khi thêm cột ID");
+  rmSync(root, { recursive: true });
+
+  const withId = `# Ledger\n\n| ID | Area | Decision | Status |\n|---|---|---|---|\n| L-001 | Docs | a | DECIDED |\n| L-002 | Docs | b | DECIDED |\n\n| Khác | Cột |\n|---|---|\n| L-007 | không phải cột ID |\n`;
+  root = fixture({ ...cite, [LEDGER]: withId });
+  let r = lab(root, "check");
+  assert.equal(r.code, 1, r.out);
+  assert.match(r.out, /notes\.md: trích mã ledger không tồn tại L-007/);
+  assert.doesNotMatch(r.out, /L-002/);
+  rmSync(root, { recursive: true });
+
+  root = fixture({ "lab-docs/products/demo/notes.md": "Theo L-001, L-002.\n", [LEDGER]: withId.replace("| L-007 | không phải cột ID |\n", "") });
+  r = lab(root, "check");
+  assert.equal(r.code, 0, r.out);
   rmSync(root, { recursive: true });
 });

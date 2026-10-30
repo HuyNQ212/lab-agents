@@ -224,6 +224,74 @@ function designRecords(product) {
   return out;
 }
 
+// ---------- Design Record: mục OPEN ----------
+// Bảng `## <n>. OPEN`: | ID | Câu hỏi | Vì sao chặn | Ai quyết | Nếu sai | [Trạng thái] |
+// Dòng ĐÃ ĐÓNG khi: cột Trạng thái bắt đầu bằng ĐÓNG/BỎ; hoặc ô Câu hỏi bắt đầu bằng `ĐÓNG`/`BỎ`
+// (kể cả `**ĐÓNG …**`) hoặc gạch ngang `~~…~~`; hoặc dòng ghi "thuộc Design Record …"/"thuộc `…design-*.md`"
+// (chuyển sang Design Record khác). Dòng mở mà có ô đúng bằng `mở rộng` thì không chặn; còn lại đều chặn FROZEN.
+function parseOpenTable(text) {
+  const h = text.match(/^##\s+(?:\d+\.\s*)?OPEN\s*$/m);
+  if (!h) return null;
+  const rest = text.slice(h.index + h[0].length);
+  const end = rest.search(/^## /m);
+  const body = end === -1 ? rest : rest.slice(0, end);
+  let header = null;
+  const rows = [];
+  for (const line of body.split(/\r?\n/)) {
+    if (!line.trim().startsWith("|")) continue;
+    const cells = line.split(/(?<!\\)\|/).slice(1, -1).map(c => c.trim());
+    if (cells.every(c => /^:?-+:?$/.test(c))) continue;
+    if (!header) { header = cells.map(c => c.toLowerCase()); continue; }
+    const si = header.indexOf("trạng thái");
+    const state = si >= 0 ? (cells[si] || "") : "";
+    const q = (cells[1] || "").replace(/^\*+\s*/, "");
+    const closed = /^(ĐÓNG|BỎ)(?!\p{L})/iu.test(state) || /^(ĐÓNG|BỎ)(?!\p{L})/u.test(q) ||/^~~/.test(cells[1] || "") ||
+      cells.some(c => /thuộc\s+(Design Record|`[^`]*design-(backend|frontend)\.md`)/i.test(c));
+    rows.push({ id: cells[0].replace(/[`*]/g, ""), question: q, closed, blocking: !closed && !cells.some(c => c.toLowerCase() === "mở rộng") });
+  }
+  return rows;
+}
+
+// Thư mục product chứa Design Record của một ID: story/epic/brief/ticket, tiền tố (PLN), hoặc đường dẫn dưới lab-docs
+function designDirsOf(files, id) {
+  const idU = id.toUpperCase();
+  const exact = files.find(f => f.meta.id.toUpperCase() === idU);
+  if (exact) return [exact.product];
+  const byPrefix = [...new Set(files.filter(f => f.meta.id.toUpperCase().startsWith(idU + "-")).map(f => f.product))];
+  if (byPrefix.length) return byPrefix;
+  const dir = toPosix(id).replace(/^lab-docs\//, "").replace(/\/$/, "");
+  return existsSync(join(LAB_DOCS, dir)) ? [dir] : [];
+}
+
+function allDesignDirs() {
+  const dirs = new Set();
+  for (const f of walk(LAB_DOCS)) if (/^design-(backend|frontend)\.md$/.test(basename(f))) dirs.add(productDirOf(f));
+  return [...dirs].sort();
+}
+
+// lab design-check [<ID>]: exit 1 khi Design Record FROZEN còn OPEN chặn chưa đóng
+function designCheck(files, id) {
+  const dirs = id ? designDirsOf(files, id) : allDesignDirs();
+  const drs = dirs.flatMap(d => designRecords(d).map(r => ({ ...r, dir: d })));
+  if (!drs.length) return err(`Không có design-backend.md/design-frontend.md cho "${id ?? ""}" (thư mục: ${dirs.join(", ") || "không phân giải được"}).`);
+  const out = [];
+  let bad = 0;
+  for (const d of drs) {
+    const show = `${d.dir}/design-${d.side}.md`;
+    const rows = parseOpenTable(readFileSync(d.path, "utf8"));
+    if (!rows) { out.push(`✓ ${show} [${d.status || "?"}] không có mục OPEN`); continue; }
+    const block = rows.filter(r => r.blocking);
+    const soft = rows.filter(r => !r.closed && !r.blocking);
+    const tail = `${rows.length - block.length - soft.length}/${rows.length} đã đóng`;
+    if (!block.length) out.push(`✓ ${show} [${d.status || "?"}] ${tail}${soft.length ? `, ${soft.length} mở rộng còn mở` : ""}`);
+    else if (d.status === "FROZEN") { bad++; out.push(`✗ ${show} [FROZEN] ${tail}, ${block.length} OPEN chặn chưa đóng:`); }
+    else out.push(`! ${show} [${d.status || "?"}] ${tail}, ${block.length} OPEN chặn — chưa FROZEN nên chưa phải lỗi:`);
+    for (const r of block) out.push(`    ${r.id}: ${r.question.slice(0, 100)}`);
+  }
+  out.push(bad ? `\n✗ ${bad} Design Record FROZEN còn OPEN chặn — đóng (ĐÓNG <ngày>), chuyển Design Record khác, hoặc đưa Status về DRAFT` : `\n✓ Không Design Record FROZEN nào còn OPEN chặn.`);
+  return bad ? err(out.join("\n")) : ok(out.join("\n"));
+}
+
 function reviewOf(spec, files) {
   return files.find(f => f.meta.type === "review" && f.rel === `${spec.dir}/review.md`);
 }
@@ -295,6 +363,39 @@ function validate(files, specs) {
   }
 
   errors.push(...validateSkills());
+  errors.push(...validateLedgerRefs());
+  return errors;
+}
+
+// Mã ledger `L-<nnn>` ở cột ID của decision-ledger.md. Ledger chưa có cột ID → null (chưa có mã nào để đối chiếu).
+function ledgerCodes() {
+  const p = join(LAB_DOCS, "decisions", "decision-ledger.md");
+  if (!existsSync(p)) return null;
+  let codes = null, idCol = null; // null = chưa gặp header của bảng hiện tại; -1 = bảng không có cột ID
+  for (const line of readFileSync(p, "utf8").split(/\r?\n/)) {
+    if (!line.trim().startsWith("|")) { idCol = null; continue; }
+    const cells = line.split(/(?<!\\)\|/).slice(1, -1).map(c => c.trim());
+    if (cells.every(c => /^:?-+:?$/.test(c))) continue;
+    if (idCol === null) {
+      idCol = cells.findIndex(c => c.toUpperCase() === "ID");
+      if (idCol >= 0) codes = codes || new Set();
+      continue;
+    }
+    if (idCol >= 0) for (const m of (cells[idCol] || "").matchAll(/\bL-\d+\b/g)) codes.add(m[0]);
+  }
+  return codes;
+}
+
+// Mọi file .md trong lab-docs trích `L-<nnn>` phải trỏ mã có thật trong ledger
+function validateLedgerRefs() {
+  const codes = ledgerCodes();
+  if (!codes) return [];
+  const errors = [];
+  for (const f of walk(LAB_DOCS)) {
+    const bad = new Set();
+    for (const m of readFileSync(f, "utf8").matchAll(/\bL-\d+\b/g)) if (!codes.has(m[0])) bad.add(m[0]);
+    if (bad.size) errors.push(`${toPosix(relative(ROOT, f))}: trích mã ledger không tồn tại ${[...bad].join(", ")} — decisions/decision-ledger.md cột ID`);
+  }
   return errors;
 }
 
@@ -592,6 +693,12 @@ function gateCheck(files, specs, skill, id) {
       if (!drs.length) no(`${target.product}/ chưa có design-backend.md hoặc design-frontend.md — chạy architecture-design`);
       else if (!frozen.length) no(`Design Record trong ${target.product}/ chưa FROZEN (${drs.map(d => `${d.side}=${d.status || "?"}`).join(", ")})`);
       else yes(`Design Record FROZEN: ${frozen.map(d => d.side).join(", ")}`);
+      for (const d of frozen) {
+        const block = (parseOpenTable(readFileSync(d.path, "utf8")) || []).filter(r => r.blocking);
+        block.length
+          ? no(`design-${d.side}.md FROZEN nhưng còn ${block.length} OPEN chặn chưa đóng (${block.map(r => r.id).join(", ")}) — lab design-check ${idU}`)
+          : yes(`design-${d.side}.md không còn OPEN chặn`);
+      }
       for (const d of drs.filter(d => d.status !== "FROZEN")) lines.push(`! design-${d.side}.md status=${d.status || "?"} — spec phía này chưa viết được`);
       break;
     }
@@ -773,6 +880,7 @@ const USAGE = `Dùng: node .agents/scripts/lab.mjs <lệnh>
   sync <SPEC-ID>              tạo/cập nhật specs/<SPEC-ID>/progress.md từ bảng Tickets
   coverage <PREFIX>           audit brief ↔ stories (exit 1 nếu chưa phủ)
   gate <skill> <ID>           điều kiện vào skill (exit 1 nếu FAIL)
+  design-check [<ID>]         Design Record FROZEN không còn OPEN chặn (ID = story/epic/tiền tố/thư mục; bỏ trống = tất cả)
   repo-gate <repo>            ${REPO_GATES.join(" → ")} + pin exact cho một repo (vd services/lab-user)
   all-gate                    repo-gate cho mọi repo services/ và apps/
   ship-mark <SPEC-ID> <SHIP-ID>   ghi shipped: vào story sau khi verify production
@@ -808,6 +916,7 @@ function main() {
     case "done": need(1); return finish(markDone(files, specs, args[0], args.includes("--force")));
     case "sync": need(1); return finish(syncProgress(files, specs, args[0]));
     case "coverage": need(1); return finish(coverage(files, args[0]));
+    case "design-check": return finish(designCheck(files, args[0]));
     case "ship-mark": need(2); return finish(shipMark(files, specs, args[0], args[1]));
     case "commit": need(2); return finish(commitDocs(args[0], args[1], args.includes("--push")));
     case "gate": need(1); process.exit(gateCheck(files, specs, args[0], args[1]) ? 0 : 1);
