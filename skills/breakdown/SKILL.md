@@ -1,21 +1,26 @@
 ---
 name: breakdown
-description: "Phân rã Product Brief thành Epics/Stories/AC sau coverage audit. Sáu bước bắt buộc — DISCOVER EXISTING → COVERAGE AUDIT (bằng script, không audit tay) → SCOPE CONFIRMATION (checkpoint dừng bắt buộc) → BREAKDOWN DRAFT → USER REVIEW → PUBLISH. Dùng khi user nói \"breakdown\", \"break ra story\", \"chia tickets\". Không tự chạy sau khi grilling xong; không viết spec, không code."
+description: "Phân rã Product Brief thành Epics/Stories/AC sau coverage audit. Sáu bước bắt buộc — DISCOVER EXISTING → COVERAGE AUDIT (bằng script, không audit tay) → BREAKDOWN DRAFT → SCOPE + USER REVIEW (một gói quyết định, checkpoint dừng bắt buộc) → PUBLISH → COMMIT. Đầu vào là <PREFIX> có brief done; đầu ra là stories/<ID>.md và stories/<EPIC-ID>.md, kết thúc khi lab coverage <PREFIX> exit 0. Dùng khi user nói \"breakdown\", \"break ra story\", \"chia tickets\", hoặc khi orchestrate chuyển tiếp sau grilling/prototype. Không viết spec, không tạo ticket kỹ thuật, không code."
 metadata:
   short-description: "Product Brief → coverage audit → stories/AC"
 ---
 
+Đọc trước: `.agents/AGENTS.md`, hợp đồng bàn giao ở `.agents/skills/README.md` (mục "Hợp đồng bàn giao").
+
 # breakdown — Product Brief thành Stories
 
-Chuỗi: `grilling → **breakdown** → architecture-design → to-spec → spec-review → implement → ship`. Grilling chốt *what/why* (Product Brief); skill này phân rã *behavior* (stories + AC). KHÔNG đụng thiết kế kỹ thuật — đó là việc của `architecture-design` (quyết định) rồi `to-spec` (spec).
+Chuỗi: `grilling → [prototype] → **breakdown** → architecture-design → to-spec → spec-review → implement → ship`. Grilling chốt *what/why* (Product Brief); skill này phân rã *behavior* (stories + AC). KHÔNG đụng thiết kế kỹ thuật — đó là việc của `architecture-design` (quyết định) rồi `to-spec` (spec + bảng Tickets).
 
-Phương pháp chi tiết đọc `lab-docs/frameworks/delivery-breakdown.md`. SKILL.md chỉ chứa luật vận hành và điểm neo với script.
+Phương pháp chi tiết đọc `lab-docs/frameworks/delivery-breakdown.md`. SKILL.md chỉ chứa luật vận hành và điểm neo với script; chỗ nào lệch với framework thì hợp đồng bàn giao và SKILL.md này thắng.
 
-## 0. Đọc trước
+`lab` = `node .agents/scripts/lab.mjs`, chạy từ workspace root.
 
-- `lab-docs/frameworks/delivery-breakdown.md` — toàn bộ.
-- Product Brief của product đang nói tới: `lab-docs/products/<product>/product-brief.md` — nếu không tìm thấy brief với ID đang có → **dừng**, bảo user chạy `grilling` trước. Không breakdown mà không có brief.
-- Chạy `node .agents/scripts/lab.mjs status` — hiện trạng ID đang mở.
+## 0. Discover existing
+
+- **Prefix:** chữ in hoa, 2–6 chữ cái, trùng prefix của brief (`pln` → `PLN`). Mọi ID trong phiên dùng prefix đã chuẩn hóa.
+- **Điều kiện vào:** `lab gate breakdown <PREFIX>` — Product Brief `status: done` và có `## Capabilities`. FAIL → quay lại `grilling` cho brief đó, không breakdown khi chưa có brief done.
+- **Tìm brief bằng `lab status`** (cột FILE của ID `<PREFIX>-BRIEF`), không ghép đường dẫn tay. Brief nằm ở một trong hai gốc: `lab-docs/products/<tên>/` hoặc `lab-docs/platform/<tên>/`. Gọi thư mục chứa brief là `<dir>`; stories luôn đặt ở `<dir>/stories/`.
+- Đọc: `lab-docs/frameworks/delivery-breakdown.md` §2–§6, brief, `lab-docs/decisions/decision-ledger.md`, mọi file trong `<dir>/stories/` (kể cả story `abandoned`), prototype đã duyệt trong `lab-prototype/` nếu README của prototype có dòng `**Approval:** APPROVED`, và tài liệu của service khác khi phạm vi chạy ngang nhiều service.
 
 ## 1. Coverage audit — bằng script, không audit tay
 
@@ -25,49 +30,73 @@ Phương pháp chi tiết đọc `lab-docs/frameworks/delivery-breakdown.md`. SK
 node .agents/scripts/lab.mjs coverage <PREFIX>   # vd: coverage PLN
 ```
 
-Script đọc capability từ brief version mới nhất và đối chiếu với stories/tickets qua khóa frontmatter `brief:` + `covers:`. Đầu ra là bảng COVERED / UNCOVERED / STALE (story trỏ brief version cũ) / DEFERRED.
+Script đọc capability từ brief version mới nhất và đối chiếu với stories/tickets qua khóa frontmatter `brief:` + `brief-version:` + `covers:`. Đầu ra là bảng COVERED / UNCOVERED / STALE (story trỏ brief version cũ hoặc brief ID khác) / DEFERRED / OUT OF SCOPE.
 
 Luật:
 - Báo cáo audit **phải kèm output của script**. Cấm tự lập bảng coverage bằng cách đọc file rồi suy luận — dễ sót.
 - Script chỉ chắc chắn về UNCOVERED / STALE. Các mục nghi PARTIAL hoặc cần xét ngữ nghĩa AC → **lúc này** agent mới đọc story tương ứng và đánh giá, ghi rõ "script-flagged for review".
-- Nếu brief chưa có section `## Capabilities` machine-readable → dừng, nhờ user (hoặc quay lại `grilling` Round CONVERGE) chuẩn hóa brief trước. Không tự đoán capability từ văn xuôi.
+- **STALE sau khi brief cập nhật:** chỉ sửa các story bị đánh STALE — đọc lại capability đã đổi, chỉnh AC nếu nghĩa đổi, cập nhật `covers:` và `brief-version:` theo brief mới. Không viết lại story không bị ảnh hưởng.
+- Capability `OPEN` trong brief → không thành story; ghi vào gói quyết định là điểm chặn và trả về `grilling` cho đúng capability đó.
 
-## 2. Scope confirmation — checkpoint bắt buộc
+## 2. Draft stories
 
-Sau audit, **dừng và trình bày** (framework §4):
-- Kết quả coverage + nguồn đã kiểm tra.
-- Phạm vi đề xuất đợt này (ưu tiên MVP / một vertical slice).
-- Mức output: (A) Epics/Stories/AC — mặc định; (B) thêm vertical-slice tickets — chỉ khi user muốn.
-- Tối đa 1–3 câu hỏi có khả năng đổi scope. Không grill lại brief.
+Viết bản nháp đầy đủ cho phạm vi đề xuất **trước** khi hỏi user, để user duyệt scope và nội dung trong một lần. Theo framework §5A, chỉ mức Epics/Stories/AC — ticket kỹ thuật là việc của `to-spec` sau Design Record, breakdown không sinh ticket.
 
-Không tự xác nhận thay user. Nếu user đã chỉ định scope trong lệnh → xác nhận ngắn phần còn thiếu.
+**Cấp ID:**
+- Story `<PREFIX>-<nnn>` (ba chữ số), epic `<PREFIX>-E<nn>`. Số mới = số lớn nhất đang có trong `<dir>/stories/` + 1, quét cả story `abandoned`. Không tái dùng, không đánh số lại ID đã có.
+- Capability đã có story → sửa file cùng ID, không tạo story trùng.
 
-## 3. Draft stories
+**Frontmatter story — đúng thứ tự, đúng khóa:**
 
-Theo framework §5A. Ràng buộc bắt buộc về metadata:
-- Mỗi story có frontmatter đầy đủ theo `documentation-standards.md` §0, trong đó **`brief: <brief-ID>`** trỏ tới brief version đang cover và **`covers: [C1, C2]`** liệt kê capability ID từ section `## Capabilities` của brief. Thiếu hai khóa này → `lab check` không pass và coverage sau này sẽ lệch.
-- Một capability nhiều story cũng được; mỗi story `covers:` ít nhất một capability. Story cross-service: vẫn một story một outcome, mô tả dependency từng service.
+```markdown
+---
+id: PLN-011
+type: story
+status: open
+repos: [lab-planning]
+parent: PLN-E04
+brief: PLN-BRIEF
+brief-version: 3
+covers: [C1, C2]
+---
+```
+
+- `brief-version` lấy từ frontmatter của brief đang cover. Thiếu `brief`/`covers` → `lab check` FAIL; thiếu `brief-version` → coverage không bắt được STALE lần sau.
+- Story không có khối `## Tasks` và không sửa tay `status`: status do `lab tick <TICKET-ID>` dẫn xuất từ ticket của spec.
+- Một capability nhiều story cũng được; mỗi story `covers:` ít nhất một capability. Story chạm nhiều service: vẫn một story một outcome, mô tả dependency từng service.
 - Non-goals và DEFERRED giữ nguyên trạng thái; không tự tạo requirement mới lấp trống.
-- Chạy `lab check` sau khi viết file. Chạy lại `lab coverage <PREFIX>` để xác nhận mọi capability thuộc scope đã COVERED.
+
+**Epic** `<dir>/stories/<EPIC-ID>.md`: frontmatter `id`, `type: epic`, `repos` — không `status`, không `## Tasks`; thân là mô tả, danh sách story con, dependencies. Bỏ tầng epic chỉ khi phạm vi chỉ có một story.
+
+## 3. Scope + duyệt — một gói quyết định (checkpoint bắt buộc)
+
+Dừng **một lần** theo `.agents/references/decision-packet.md`, gói gồm cả scope lẫn bản nháp:
+- Câu hỏi đầu: duyệt phạm vi đợt này (ưu tiên MVP / một vertical slice), phương án đề xuất đứng đầu.
+- Tối đa 1–3 câu hỏi khác có khả năng đổi scope; capability OPEN chặn breakdown; không grill lại brief.
+- Phần dưới trang: output `lab coverage`, nguồn đã kiểm tra, danh sách story/epic nháp kèm AC, dependencies, coverage dự kiến sau breakdown.
+
+Không tự xác nhận thay user. User đã chỉ định scope trong lệnh → gói chỉ còn câu duyệt bản nháp. User đổi scope → sửa nháp, cập nhật cùng trang, hỏi lại phần đổi.
 
 ## 4. Publish
 
-Theo framework §6: trình draft → chờ duyệt → ghi vào `lab-docs/products/<product>/stories.md` (sửa file có sẵn, không tạo file trùng). Đầu file ghi nguồn brief ID/version + phạm vi coverage để lần audit sau đối chiếu. Không tạo GitHub Issues, không code.
+Sau khi user duyệt:
+1. Ghi `<dir>/stories/<ID>.md` và `<dir>/stories/<EPIC-ID>.md`, một story một file; sửa file cùng ID nếu đã có. Mỗi file ghi nguồn brief ID/version để lần audit sau đối chiếu.
+2. `lab check` OK.
+3. `lab coverage <PREFIX>` exit 0 — không còn UNCOVERED/STALE ngoài DEFERRED/OUT OF SCOPE. Capability user đã loại khỏi đợt này mà brief vẫn chưa DEFERRED → quay lại `grilling` để user đổi trạng thái trong brief, không tự sửa brief.
+4. `lab commit <PREFIX> "breakdown: <phạm vi>"` (thêm `--push` khi chuỗi cần bản trên remote); báo lại danh sách file đã commit.
+
+Không tạo GitHub Issues, không code.
 
 ## 5. Bất biến
 
-- Không tự chạy khi user chưa yêu cầu breakdown — kể cả ngay sau Product Brief mới xong.
 - Coverage audit luôn qua `lab coverage`, agent chỉ bổ sung phần ngữ nghĩa script không chốt được.
-- Không nâng OPEN/DEFERRED trong brief thành story.
-- Output tối đa là stories/AC (và tickets nếu được yêu cầu mức B) — không spec, không code.
+- Không nâng OPEN/DEFERRED trong brief thành story; chỉ user nâng lên DECIDED.
+- Output tối đa là epics/stories/AC — không ticket kỹ thuật, không spec, không code.
 - Nếu audit phát hiện brief còn lỗ hổng requirement lớn → quay lại `grilling` đúng phần thiếu, không tự vá trong breakdown.
 
-## Vị trí trong chuỗi
+## Đầu ra / bước tiếp theo
 
-```text
-grilling → [prototype] → breakdown → architecture-design → to-spec → spec-review → implement → ship
-```
-
-**Đầu ra tài liệu:** `lab-docs/products/<product>/stories/<ID>.md` (+ `stories/<EPIC-ID>.md`) → **bước tiếp theo:** chốt thiết kế → invoke `architecture-design <cụm>`
-
-**Điều kiện vào:** `lab gate breakdown <prefix>` — yêu cầu Product Brief `status: done` + có section `## Capabilities`. Nếu FAIL, chạy `grilling` trước.
+- **Đầu vào:** `<PREFIX>`, gate `lab gate breakdown <PREFIX>` PASS.
+- **Đầu ra:** `<dir>/stories/<EPIC-ID>.md` (`type: epic`) và `<dir>/stories/<ID>.md` (`type: story`, `status: open`, `repos`, `parent`, `brief`, `brief-version`, `covers`).
+- **Kết thúc khi:** `lab coverage <PREFIX>` exit 0, `lab check` OK, đã `lab commit <PREFIX>`.
+- **Bước tiếp theo:** `architecture-design <EPIC-ID hoặc story ID>`.

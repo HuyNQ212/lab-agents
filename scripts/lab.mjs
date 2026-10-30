@@ -98,7 +98,7 @@ function productDirOf(absPath) {
 function loadAll() {
   const files = [];
   for (const f of walk(LAB_DOCS)) {
-    const text = readFileSync(f, "utf8");
+    const text = readFileSync(f, "utf8").replace(/^﻿/, "");
     const fm = parseFrontmatter(text);
     if (!fm || !fm.meta.id) continue;
     files.push({
@@ -450,7 +450,15 @@ function syncProgress(files, specs, specId) {
 // lab ship-mark <SPEC-ID> <SHIP-ID>: đánh dấu story đã lên production
 function shipMark(files, specs, specId, shipId) {
   const ss = specs.filter(s => s.specId === specId);
-  if (!ss.length) return err(`Không có specs/${specId}/.`);
+  if (!ss.length) {
+    // ticket nhỏ ship riêng: lab ship-mark SETUP-001 SETUP-001-ship
+    const t = loadSmallTickets(files).find(x => x.meta.id === specId);
+    if (!t) return err(`Không có specs/${specId}/ hay ticket nhỏ ${specId}.`);
+    if (t.meta.status !== "done") return err(`CHẶN: ${specId} status=${t.meta.status}, chưa done — không ship-mark.`);
+    t.text = setFrontmatterKey(t.text, "shipped", `${today()} ${shipId}`);
+    writeFileSync(t.path, t.text);
+    return ok(`${t.show}: shipped ${today()} ${shipId}`);
+  }
   const storyIds = [...new Set(ss.flatMap(s => s.tickets.map(t => storyOfTicket(t.id))))];
   const out = [];
   for (const id of storyIds) {
@@ -516,7 +524,8 @@ function coverage(files, prefix) {
   console.log(`Brief: ${brief.meta.id} (version ${bver || "?"}, ${brief.meta.date || "?"}) — ${brief.rel}\n`);
   console.log(line(["CAP", "MÔ TẢ", "TRẠNG THÁI", "COVERAGE", "STORY/TICKET", "GHI CHÚ"]));
   console.log(w.map(n => "-".repeat(n)).join("-+-"));
-  let covered = 0, uncovered = 0, stale = 0, skipped = 0;
+  // OPEN chưa có story không chặn: breakdown không phân rã việc user chưa chốt
+  let covered = 0, uncovered = 0, stale = 0, skipped = 0, open = 0;
   for (const cap of caps) {
     const its = coveredBy[cap.id] || [];
     let cov = "UNCOVERED", note = "";
@@ -526,10 +535,15 @@ function coverage(files, prefix) {
       const old = its.filter(it => (it.meta.brief && it.meta.brief !== brief.meta.id) || Number(it.meta["brief-version"] || bver) < bver);
       if (old.length) { cov = "STALE"; stale++; note = `rà lại ${old.map(x => x.meta.id).join(", ")}`; }
       else { cov = "COVERED"; covered++; }
-    } else uncovered++;
+    } else if (cap.status === "OPEN") { cov = "OPEN"; open++; note = "chờ user chốt trong brief"; }
+    else uncovered++;
     console.log(line([cap.id, cap.desc.slice(0, w[1] - 1), cap.status || "—", cov, (its.map(x => x.meta.id).join(", ") || "—").slice(0, w[4] - 1), note || (cov === "UNCOVERED" ? "cần breakdown" : "")]));
   }
-  console.log(`\n${caps.length} capability: COVERED=${covered} STALE=${stale} UNCOVERED=${uncovered} DEFERRED/OUT=${skipped}`);
+  const capIds = new Set(caps.map(c => c.id));
+  const unknown = Object.keys(coveredBy).filter(cid => !capIds.has(cid));
+  for (const cid of unknown) console.log(`! ${coveredBy[cid].map(x => x.meta.id).join(", ")} covers ${cid} — brief không có capability này`);
+  console.log(`\n${caps.length} capability: COVERED=${covered} STALE=${stale} UNCOVERED=${uncovered} OPEN=${open} DEFERRED/OUT=${skipped}${unknown.length ? ` COVERS-LẠ=${unknown.length}` : ""}`);
+  if (unknown.length) return err(`→ ${unknown.length} mã covers không có trong brief — sửa covers của story.`);
   if (uncovered || stale) return err(`→ ${uncovered} capability UNCOVERED, ${stale} STALE — breakdown chưa đủ.`);
   return ok("→ Phủ đủ.");
 }
@@ -560,6 +574,7 @@ function gateCheck(files, specs, skill, id) {
     }
     case "architecture-design": {
       const target = files.find(f => f.meta.id === idU);
+      if (!target && idU !== prefix) { no(`không có story/epic ${idU} — chạy breakdown trước`); break; }
       const stories = target ? [target, ...files.filter(f => f.meta.parent === idU)] : files.filter(f => f.meta.type === "story" && f.meta.id.startsWith(prefix + "-"));
       const real = stories.filter(f => f.meta.type === "story" || f.meta.type === "epic");
       if (!real.length) { no(`không có story/epic ${idU} — chạy breakdown trước`); break; }
@@ -702,7 +717,8 @@ function commitDocs(id, message, push) {
   }
   for (const s of resolveSpecs(idU, files, specs)) { related.add(s.specId); s.stories.forEach(x => related.add(x)); }
   const mine = changed.filter(p => {
-    if ([...related].some(r => p.includes(`/${r}/`) || p.endsWith(`/${r}.md`))) return true;
+    const pu = p.toUpperCase();
+    if ([...related].some(r => pu.includes(`/${r.toUpperCase()}/`) || pu.endsWith(`/${r.toUpperCase()}.MD`))) return true;
     const f = files.find(x => x.rel === p);
     return f && (related.has(f.meta.id) || related.has(f.meta.parent));
   });

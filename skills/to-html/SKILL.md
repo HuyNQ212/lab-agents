@@ -7,7 +7,9 @@ metadata:
 
 # to-html — Chuyển nội dung thành standalone HTML
 
-Phong cách tham chiếu: repo `anthropics/html-effectiveness` (đã clone tại `/tmp/he`). Mọi trang là **một file `.html` duy nhất**, không build, không dependency ngoài (font system), mở trực tiếp trong browser. Palette và typography cố định — xem `references/theme.css`.
+Đọc trước: `.agents/AGENTS.md`, hợp đồng bàn giao ở `.agents/skills/README.md`.
+
+Phong cách tham chiếu: repo `anthropics/html-effectiveness` — chỉ để tham khảo, không bắt buộc có bản clone; mọi thứ cần dùng đã nằm trong `references/theme.css`. Mọi trang là **một file `.html` duy nhất**, không build, không dependency ngoài (font system), mở trực tiếp trong browser. Palette và typography cố định — xem `references/theme.css`.
 
 ## 0. Đọc trước
 
@@ -17,21 +19,25 @@ Phong cách tham chiếu: repo `anthropics/html-effectiveness` (đã clone tại
 ## 1. Luật bất biến
 
 1. **Một file `.html` duy nhất**, self-contained. Không CDN, không framework, không build step.
-2. **Palette ivory/clay/olive** (xem theme.css) — không dùng dark theme mặc định; light ivory background.
+2. **Palette ivory/clay/olive** (xem theme.css) — mặc định nền ivory sáng. Biến thể dark chỉ đổi token (`prefers-color-scheme` và `data-theme`, đã có trong theme.css), không thêm class riêng cho dark.
 3. **Typography:** header serif (`ui-serif, Georgia`), body sans (`system-ui`), code mono (`ui-monospace`). Letter-spacing âm nhẹ cho heading.
-4. **Layout:** `.page` max-width 860px, centered, padding 56px 24px 120px. Mobile-first responsive.
-5. **Component chuẩn:** stat-card, table.shipped, highlights, section + hr.rule, details/summary. Tái dùng class names trong theme.css.
+4. **Layout:** `.page` max-width 860px, centered; gutter 16px ở màn hình hẹp (theme.css lo). Bảng luôn bọc trong `.table-wrap` để không cuộn ngang cả trang ở 390px.
+5. **Component chuẩn:** stat-card, table.shipped, highlights, story, badge, section + hr.rule, details/summary. Chỉ dùng class có trong theme.css; cần class mới thì thêm vào theme.css trước.
 6. **Không emoji** trong UI (icon dùng CSS shape hoặc ký tự đơn giản). Tiếng Việt OK.
-7. **Accessibility:** semantic tags (header, section, table, details), contrast đủ, focus visible.
-8. **Print-friendly:** không animation bắt buộc; nếu có animation thì `prefers-reduced-motion` respect.
+7. **Accessibility:** semantic tags (header, section, table, details), contrast đủ, `:focus-visible` (đã có trong theme.css).
+8. **Print-friendly:** không animation bắt buộc; theme.css tắt animation khi `prefers-reduced-motion: reduce`.
 
 ## 2. Quy trình
 
 1. Phân tích nội dung nguồn → xác định cấu trúc (header title, subtitle, summary band stats, sections, tables, lists, notes).
 2. Map sang components chuẩn (stat-card cho metric, table cho danh sách, highlights cho bullet, details cho phụ lục).
-3. Tạo file `.html` tại vị trí user chỉ định (mặc định cạnh file nguồn, tên `<slug>.html`). Nếu user không chỉ định, đặt trong scratchpad và trả link.
+3. Ghi file `<slug>.html` vào scratchpad của phiên. Chỉ ghi cạnh file nguồn hoặc chỗ khác khi user chỉ định.
 4. Chèn toàn bộ CSS từ `references/theme.css` inline vào `<style>`.
-5. Verify: mở mental — không horizontal scroll ở 390px, không dependency ngoài.
+5. Kiểm bằng lệnh, không kiểm bằng mắt:
+   - `grep -nE '<script[^>]+src=|<link[^>]+href=|@import' <file>` ra rỗng (không dependency ngoài);
+   - mọi `class="..."` trong file có selector tương ứng trong theme.css (grep từng class);
+   - mọi `<table` nằm trong `.table-wrap`;
+   - khi đã publish: mở trang ở viewport 390px (Browser pane, preset mobile), `document.documentElement.scrollWidth <= innerWidth`.
 
 ## 3. Cấu trúc trang mẫu
 
@@ -63,7 +69,7 @@ Phong cách tham chiếu: repo `anthropics/html-effectiveness` (đã clone tại
     <section>
       <h2>...</h2>
       <hr class="rule">
-      <table class="shipped">...</table>
+      <div class="table-wrap"><table class="shipped">...</table></div>
     </section>
 
     <details>
@@ -85,8 +91,8 @@ Phong cách tham chiếu: repo `anthropics/html-effectiveness` (đã clone tại
 | Danh sách có cột | `table.shipped` |
 | Bullet insight | `.highlights` |
 | Nhóm collapsible | `<details><summary>` |
-| Story/card | `.story` (xem breakdown-view) — background white, border, radius panel |
-| Badge trạng thái | `.badge` (pill) |
+| Story/card | `.story` > `.story-head` (`.story-id`, `.story-title`, `.badge`) + `ul` cho AC |
+| Badge trạng thái | `.badge`, thêm `.ok` / `.warn` / `.danger` theo trạng thái |
 
 ## 5. Bất biến về màu
 
@@ -100,10 +106,11 @@ Phong cách tham chiếu: repo `anthropics/html-effectiveness` (đã clone tại
 
 ## 6. Output
 
-- Tạo file `.html` và báo đường dẫn clickable cho user.
-- Nếu user yêu cầu "render/preview", dùng Artifact tool (publish) sau khi viết file — theo contract artifact-design. Nếu chỉ muốn file local, không publish.
+- **Mặc định publish thành Artifact riêng tư** và gửi liên kết — phiên có thể chạy từ xa, user không mở được file local. Trước khi publish nạp skill `artifact-design` theo hợp đồng của công cụ Artifact. Cập nhật trang đã có thì publish lại cùng đường dẫn file để giữ URL.
+- Chỉ giữ file local, không publish, khi user xin file.
 - Không commit git trừ khi user yêu cầu.
 
-## Vị trí trong chuỗi
+## Đầu ra / bước tiếp theo
 
-Tiện ích trình bày, đứng ngoài chuỗi chính. Không tạo quyết định, không sửa tài liệu nguồn. Không có bước tiếp theo trong quy trình skill.
+- **Đầu ra:** một trang HTML self-contained, đã publish thành Artifact (liên kết) hoặc file local khi user xin file; tài liệu nguồn không đổi.
+- **Bước tiếp theo:** không có — tiện ích trình bày ngoài chuỗi chính, không tạo quyết định. Trang dùng làm gói quyết định thì nội dung theo `.agents/references/decision-packet.md`.

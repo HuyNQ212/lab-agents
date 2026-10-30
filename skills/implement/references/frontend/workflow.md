@@ -2,6 +2,7 @@
 
 > Ruột bước 2 và 3 của `implement` cho nhánh frontend.
 > Luật cứng: `lab-docs/architecture/frontend.md` §5–§6 + `.agents/AGENTS.md` luật 17–30.
+> App mới chưa có khung: cấu trúc thư mục theo `frontend.md` §5 (mục "Cấu trúc thư mục").
 >
 > **Ràng buộc gốc:** user **không đọc source code frontend**. Review = **ảnh Storybook**. Nên bước ấn ảnh và đọc ảnh là bước review thật, không phải phụ.
 
@@ -26,12 +27,10 @@ Nhắc nhanh chỗ hay vi phạm:
 ### Cổng 2 — Gate máy
 
 ```bash
-npm run typecheck
-npm run lint
-npm test
+node .agents/scripts/lab.mjs repo-gate apps/lab-portal   # từ workspace root
 ```
 
-Fail thì dừng. **Không sang bước ảnh khi test đỏ** — ảnh của code hỏng không có giá trị review.
+Chạy `format:check → lint → typecheck → test → build` + kiểm pin exact và `package-lock.json`. Thiếu script gate → blocker, `capture` ticket `MAINT-`. Fail thì dừng. **Không sang bước ảnh khi test đỏ** — ảnh của code hỏng không có giá trị review.
 
 Test theo thang 3 tầng (`frontend.md` §6):
 
@@ -69,9 +68,9 @@ npm run shots
 curl -s http://localhost:6006/index.json > /dev/null && echo ready
 ```
 
-Nếu chưa ready thì chờ và thử lại, tối đa ~30 giây, rồi báo user.
+Nếu chưa ready thì chờ và thử lại, tối đa ~30 giây, rồi dừng theo giao thức của `SKILL.md`.
 
-`npm run shots` là Playwright script đọc `index.json`, chụp mọi story ở desktop 1280 và mobile 390 → `docs/delivery/<ID>/shots/<storyId>-desktop.png` và `-mobile.png` (chuẩn lưu trữ: `lab-docs/frameworks/documentation-standards.md` §2).
+`npm run shots` là Playwright script đọc `index.json` của Storybook, chụp mọi story ở desktop 1280 và mobile 390. Ảnh bằng chứng nằm **duy nhất** ở `apps/lab-portal/docs/delivery/<TICKET-ID>/shots/<storyId>-desktop.png` và `-mobile.png` (chuẩn `lab-docs/frameworks/documentation-standards.md` §2) và được commit cùng ticket. Script chưa nhận `<TICKET-ID>` hoặc chưa ghi được vào thư mục đó → blocker, `capture` ticket `MAINT-` sửa script; không chép tay, không để ảnh ở thư mục không commit. `.artifacts/shots/` và `shots.json` là của `lab-prototype`, không dùng ở đây.
 
 Lệnh này **tất định, một lần, không tốn token**. Cấm dùng Playwright MCP để điều hướng Storybook (tốn token, không tất định, đã từng mất ~10 step chỉ để vào một story). MCP chỉ dùng khi cần smoke chức năng thật trên app đang chạy.
 
@@ -92,20 +91,21 @@ Bốn câu này kiểm được **từ ảnh**, và mỗi câu tương ứng m�
 
 ### Cổng 6 — Contract với backend
 
-- [ ] Mọi response có zod schema, khớp `spec-backend.md` §4
+- [ ] Mọi response có zod schema, khớp API contract trong `spec-backend.md` (mục API contract của spec cùng SPEC-ID hoặc spec của service cung cấp endpoint)
 - [ ] Endpoint dùng có tồn tại thật (không bịa)
 - [ ] Error code map sang thông điệp tiếng Việt; không hiển thị `message` của server
 - [ ] `.strict()` chỉ dùng cho **input**, không cho response (backend thêm field additive sẽ làm FE chết)
 
 ## Bằng chứng cho DoD
 
-| Mục | Ghi gì |
-|---|---|
-| Test | Lệnh + số test pass, tách rõ tầng 1 / tầng 2 |
-| Typecheck / lint | Sạch |
-| Story | Danh sách story + trạng thái nào đã phủ |
-| Ảnh | **Đường dẫn** trong `.artifacts/shots/` — desktop + mobile |
-| Đọc ảnh | 4 câu trả lời, mỗi câu kèm tên file ảnh |
+Ghi vào `apps/lab-portal/docs/delivery/<TICKET-ID>/` (chuẩn `documentation-standards.md` §2):
+
+| Mục | File | Ghi gì |
+|---|---|---|
+| Gate | `gate-<TICKET-ID>.md` | Output `lab repo-gate`; số test pass tách rõ tầng 1 / tầng 2 |
+| Story | `gate-<TICKET-ID>.md` | Danh sách story + trạng thái nào đã phủ |
+| Ảnh | `shots/` | Desktop + mobile cho mọi story của ticket |
+| Đọc ảnh | `review-triage.md` | 4 câu trả lời, mỗi câu kèm tên file ảnh |
 
 ## Prompt review frontend
 
@@ -113,10 +113,12 @@ Xem `references/review-protocol.md` §"Prompt mẫu — frontend". Điểm bắt
 
 Checklist: `spec-review/references/frontend/checklist.md`.
 
-## Dừng và báo user khi
+## Dừng khi
+
+Theo giao thức "Dừng giữa chừng" của `SKILL.md` — câu hỏi cho user đi qua gói quyết định, thiếu hạ tầng đi qua `capture`.
 
 - Storybook không khởi động được, hoặc `index.json` không trả về.
-- `npm run shots` fail hoặc sinh ảnh thiếu story.
+- `npm run shots` fail, sinh ảnh thiếu story, hoặc không ghi được vào `docs/delivery/<TICKET-ID>/shots/`.
 - Một trong 4 câu đọc ảnh fail theo cách **không sửa được mà không đổi thiết kế** (ví dụ: spec không mô tả trạng thái error) → ESCALATE.
 - Cần component phức tạp đòi thư viện mới ngoài spec.
 - Cần semantic color chưa có token.

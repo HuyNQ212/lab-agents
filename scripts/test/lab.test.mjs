@@ -192,3 +192,22 @@ test("check bắt SKILL.md sai: tên lệch thư mục, YAML không quote", () =
   assert.doesNotMatch(r.out, /skills[\/]good/);
   rmSync(root, { recursive: true });
 });
+
+test("coverage: capability OPEN chưa có story không chặn", () => {
+  const p = "lab-docs/products/demo/product-brief.md";
+  const root = fixture();
+  writeFileSync(join(root, p), read(root, p).replace("- C3: Xuất lịch [DEFERRED]", "- C3: Xuất lịch [OPEN]"));
+  const r = lab(root, "coverage", "DMO");
+  assert.equal(r.code, 0, r.out);
+  assert.match(r.out, /OPEN=1/);
+  rmSync(root, { recursive: true });
+});
+
+test("ship-mark ticket nhỏ ship riêng", () => {
+  const root = fixture();
+  assert.equal(lab(root, "ship-mark", "SETUP-001", "SETUP-001-ship").code, 1, "chưa done");
+  lab(root, "done", "SETUP-001");
+  assert.equal(lab(root, "ship-mark", "SETUP-001", "SETUP-001-ship").code, 0);
+  assert.match(read(root, "lab-docs/platform/setup/specs/SETUP-001/ticket.md"), /shipped: .* SETUP-001-ship/);
+  rmSync(root, { recursive: true });
+});

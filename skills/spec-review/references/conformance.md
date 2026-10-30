@@ -3,6 +3,7 @@
 > Câu hỏi duy nhất của pass này: **spec có làm đúng thứ đã được duyệt không?** Không hỏi "thiết kế có hay không".
 > Mỗi mã dưới đây: kiểm gì → **cách kiểm bằng máy nếu có** → dấu hiệu lệch → mức mặc định.
 > Lệch phần **FROZEN** của Design Record (hoặc delta đã duyệt) mặc định **BLOCKER**; riêng tên gọi lệch mà cùng nghĩa → MINOR.
+> Mã L1–L7b dẫn tới `lab-docs/frameworks/design-principles.md`; luật cứng 1–30 dẫn tới `.agents/AGENTS.md`.
 
 ## Chung (cả hai nhánh)
 

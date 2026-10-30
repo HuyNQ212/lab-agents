@@ -1,7 +1,7 @@
 # Deploy checklist — cho reviewer của ship plan
 
 > Dùng ở Phase 1 của `ship`. Bộ câu hỏi phản biện **plan**, không phải code.
-> Reviewer nhận **chỉ plan**, không nhận reasoning của người lập plan.
+> Reviewer là sub-agent context sạch, nhận **đúng hai file**: `ship-plan.md` và file này. Không nhận reasoning của người lập plan.
 
 ## Vì sao review ở đây quan trọng nhất trong toàn chuỗi
 
@@ -20,18 +20,19 @@ Vì vậy reviewer ở đây phải chấm chặt hơn, và câu hỏi phải l�
 ## 2. Gate coverage
 
 - Mọi repo có thay đổi đều có gate chạy? → thiếu repo = **BLOCKER**.
-- Gate chạy trên nội dung **sau rebase** chưa? → chỉ chạy trước rebase = **BLOCKER**.
+- Gate là `lab repo-gate <repo>` (bộ `REPO_GATES` trong `lab.mjs`: format:check → lint → typecheck → test → build + pin exact + lockfile)? → bộ lệnh tự chọn khác = **BLOCKER**.
+- Gate chạy trên nội dung **sau rebase**, có `tested-sha` từng repo? → thiếu = **BLOCKER**.
 - Có output thật (số test, thời gian build) hay chỉ "đã chạy"? → thiếu = **MAJOR**.
-- `format:check` có trong danh sách? → thiếu = **MAJOR** (Prettier đã DECIDED).
-- Build có chạy, hay chỉ test? → thiếu build = **MAJOR**.
-- Có gate nào bị bỏ qua kèm lý do không dẫn được luật? → **MAJOR**.
+- Có gate nào bị bỏ qua? → **BLOCKER**. Thiếu script có sẵn từ trước phải thành ticket MAINT, không bỏ qua.
 
 ## 3. Merge strategy và verify
 
-- Merge dùng `--rebase` chứ không `--squash`? → squash = **BLOCKER** (phá giá trị gate: hash khác cái đã test).
+- Merge dùng `--rebase --match-head-commit <tested-sha>`, không `--squash`? → squash hoặc thiếu `--match-head-commit` = **BLOCKER**.
+- Có bước force push nào? → **BLOCKER** (hook chặn; cập nhật nhánh bằng `gh pr update-branch --rebase`).
 - Có bước verify tree hash sau merge? → thiếu = **BLOCKER**.
 - Nếu tree hash khác, plan nói làm gì? → không nói = **BLOCKER**.
-- Plan có tính trường hợp `main` di chuyển trong lúc review? → không = **MAJOR**.
+- Plan có tính trường hợp `main` di chuyển trong lúc review (chạy gate trên `origin/main`, fail thì không migrate/deploy)? → không = **MAJOR**.
+- `wrangler whoami` đúng account trước merge? → thiếu = **MAJOR**.
 
 ## 4. Migration
 
@@ -41,19 +42,21 @@ Trục rủi ro cao nhất. Chấm chặt.
 - Mọi file đã apply **local** thành công? → chưa = **BLOCKER**.
 - Mọi file forward-only, additive, không `RENAME`/`DROP TABLE`? → vi phạm = **BLOCKER** (luật 6).
 - Thứ tự file khớp dependency giữa bảng? → sai = **BLOCKER** (FK/CHECK fail giữa chừng).
-- **"Nếu file fail giữa chừng, schema ở trạng thái nào?" có câu trả lời cụ thể?** → không trả lời được = **BLOCKER**.
-- ⚠️ Chưa verify D1 có chạy một file `.sql` trong một transaction không. Plan có **coi mỗi file là có thể hỏng một phần** không? → không = **BLOCKER**.
-- Có bước backup D1 trước migrate? → thiếu = **BLOCKER**.
-- Backup có đường dẫn + thời điểm cụ thể? → "sẽ backup" = **MAJOR**.
-- Apply từng D1 một, verify sau mỗi cái? → gộp = **MAJOR**.
-- Verify dùng bằng chứng gì (bảng/cột/index tồn tại, `d1_migrations` có dòng)? → "lệnh chạy không lỗi" = **MAJOR**.
+- **"Nếu dừng giữa hai file, schema ở trạng thái nào?" có câu trả lời cụ thể?** (`migrations apply` rollback riêng file lỗi, file trước giữ) → không trả lời được = **BLOCKER**.
+- Có bước ghi bookmark `npx wrangler d1 time-travel info <DB> --json` trước migrate? → thiếu = **BLOCKER**.
+- Có `d1 export` dữ liệu production vào thư mục được commit? → **BLOCKER**.
+- Apply từng D1 một bằng `npx wrangler d1 migrations apply <DB> --remote`, verify sau mỗi cái? → gộp = **MAJOR**.
+- Verify dùng `migrations list <DB> --remote` (rỗng) + `PRAGMA table_info`? → "lệnh chạy không lỗi" = **MAJOR**.
+- Có `PRAGMA optimize` sau migration (backend.md §10.5)? → thiếu = **MINOR**.
 
 ## 5. Deploy
 
-- Deploy order **callee → caller**? → ngược = **BLOCKER** (caller gọi binding chưa tồn tại).
+- Deploy order suy ra từ `services[]` trong `wrangler.jsonc`, **callee → caller**? → ngược hoặc chép tay = **BLOCKER** (caller gọi binding chưa tồn tại).
 - Deploy tuần tự, dừng khi fail? → song song = **BLOCKER**.
-- `check-env.ts` chạy trước mỗi lần deploy? → thiếu = **BLOCKER** (fail-fast thật, không hình thức).
-- Version ID hiện tại của từng Worker đã ghi để rollback? → thiếu = **MAJOR**.
+- Mọi khóa `envVarSchema` có trong `npx wrangler secret list` hoặc `vars`, `ENVIRONMENT` = `production`? → thiếu = **BLOCKER**. `check-env.ts` chỉ kiểm `.env` local, không thay được bước này.
+- Version ID hiện tại của từng Worker đã ghi để rollback? → thiếu = **BLOCKER**.
+- Mỗi Worker ghi "code cũ chạy được với schema mới"? → thiếu = **MAJOR** (rollback chỉ quay code).
+- Bootstrap (remote rỗng, `database_id` rỗng, callee chưa deploy, `entrypoint` không khớp) đã xử lý? → còn = **BLOCKER**.
 - Có binding mới? → callee phải deploy trước, plan có ghi rõ? → thiếu = **BLOCKER**.
 - FE deploy sau khi tất cả BE verify xong? → trước = **MAJOR**.
 
@@ -61,34 +64,45 @@ Trục rủi ro cao nhất. Chấm chặt.
 
 - Có nâng version dependency nào trong lần ship này? → có = **BLOCKER** (version là ticket riêng; trộn vào ship làm không biết cái gì gây lỗi).
 - Lockfile khớp `package.json`? → lệch = **BLOCKER**.
-- Có range trôi nổi (`^`/`~`/`latest`/`*`)? → có = **MAJOR** (đã DECIDED pin exact).
+- Có range trôi nổi (`^`/`~`/`latest`/`*`)? → có = **BLOCKER** (pin exact; `lab repo-gate` fail).
 - `npm ls` có `UNMET PEER`? → có = **MAJOR**.
 - `wrangler` version lệch major so với lần deploy trước? → lệch mà không ghi lý do = **MAJOR**.
 - `compatibility_date` cũ hơn 6 tháng? → **MINOR**, ghi nhận.
-- Node version khớp `engines`? → lệch = **BLOCKER** (build sẽ khác local).
+- Repo có `engines` mà `node -v` lệch? → **BLOCKER**. Không có `engines` → ghi `node -v`.
 
 ## 7. Verify production
 
+- Mỗi dòng verify có lệnh và ngưỡng PASS máy kiểm được? → "kiểm bằng mắt"/"user smoke" = **MAJOR**.
 - Có kế hoạch verify cho **từng** Worker vừa deploy? → thiếu = **MAJOR**.
 - Verify có kiểm `requestId` trong log (auth context chảy đúng)? → thiếu = **MAJOR**.
 - Có kiểm contract thật khớp zod schema của FE? → thiếu = **MAJOR** (đây là chỗ lệch contract nổ).
 - Có bước kiểm FE tải được (không màn hình trắng)? → thiếu = **MAJOR**.
 - Có kiểm query trên bảng vừa migration? → thiếu = **MAJOR**.
-- Plan có phân biệt rõ "skill verify" và "user smoke"? → lẫn = **QUESTION** (làm rõ ai chịu trách nhiệm kết luận).
 
 ## 8. Điểm dừng và rollback
 
-- Ba điểm dừng bắt buộc (duyệt PR, migration remote, deploy) đã ghi rõ? → thiếu = **BLOCKER**.
-- Mỗi bước không hoàn tác được có đường lùi cụ thể? → "sẽ xử lý nếu cần" = **BLOCKER**.
+- Gói quyết định go/no-go liệt kê đủ hành động không hoàn tác được (PR, D1, Worker, FE)? → thiếu = **BLOCKER**.
+- Mỗi bước không hoàn tác được có lệnh, verify ngay sau, và đường lùi cụ thể? → "sẽ xử lý nếu cần" = **BLOCKER**.
+- Rollback Worker theo thứ tự caller trước callee; restore D1 là câu hỏi cho user? → sai = **BLOCKER**.
 - Có ESCALATE nào từ `implement` còn chờ user mà ảnh hưởng nội dung ship? → có = **BLOCKER** (không ship khi thiết kế chưa chốt).
-- Preconditions (`gh`, dirty, behind, node) đều ✅? → ❌ mà plan vẫn tiếp = **BLOCKER**.
+- Preconditions (`gh`, `whoami`, dirty, bootstrap, gate) đều ✅? → ❌ mà plan vẫn tiếp = **BLOCKER**.
 
 ## Output của reviewer
 
-Giống `spec-review`, dùng cùng thang mức:
+Ghi `<dir>/specs/<SPEC-ID>-ship/ship-plan-review.md`. Frontmatter bắt buộc (`lab check` kiểm):
 
 ```markdown
-## Verdict: NEEDS WORK
+---
+id: <SPEC-ID>-ship-review
+type: review
+status: done
+repos: [<repo>, ...]
+parent: <SPEC-ID>-ship
+verdict: NEEDS-WORK
+open-questions: 0
+---
+
+## Verdict: NEEDS-WORK
 
 ### Findings
 
@@ -101,7 +115,7 @@ Giống `spec-review`, dùng cùng thang mức:
 - Deploy order: callee → caller đúng
 ```
 
-Plan chỉ được thực thi khi verdict **PASS**.
+Plan chỉ được thực thi khi `verdict: PASS` và `open-questions: 0`. `NEEDS-WORK` khi mọi finding sửa được trong plan; `BLOCK` khi finding cần user quyết hoặc nằm ngoài ship (ESCALATE, bootstrap, code hỏng).
 
 ## Trước khi trả
 
@@ -109,4 +123,4 @@ Plan chỉ được thực thi khi verdict **PASS**.
 - [ ] Mọi BLOCKER dẫn được luật cứng hoặc hậu quả không hoàn tác cụ thể.
 - [ ] Đã kiểm câu "nếu bước này hỏng thì schema/hệ thống ở trạng thái nào".
 - [ ] Không có finding chỉ dựa trên preference.
-- [ ] Verdict khớp mức cao nhất.
+- [ ] Verdict khớp finding: sửa được trong plan → NEEDS-WORK, cần user hoặc bước khác → BLOCK.

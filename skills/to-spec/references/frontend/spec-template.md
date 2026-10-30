@@ -5,14 +5,15 @@
 >
 > **Đọc kèm:** `references/backend/spec-template.md` khi story cần cả hai phía. Đây là hai template **khác nhau**, không trộn.
 > Ràng buộc nền: `lab-docs/architecture/frontend.md` §0, §5, §6 và `.agents/AGENTS.md` luật 17–30.
+> Header và bảng Tickets là hợp đồng với `lab sync`/`lab gate` — giữ đúng chữ. Không thêm frontmatter. to-spec chỉ ghi `DRAFT`; `spec-review` đổi thành `REVIEWED` sau PASS + user duyệt.
 
-**Status:** DRAFT | REVIEWED
-**Stories:** <STORY-ID>
+**Status:** DRAFT
+**Stories:** <mọi story spec phủ: STORY-ID, ...>
 **Repo:** `apps/lab-portal`
-**Nguồn:** <stories.md, backend spec, decision-ledger — ngày đọc>
+**Nguồn:** <stories/<ID>.md, spec-backend.md, decision-ledger — ngày đọc>
 **Design Record:** <design-frontend.md — FROZEN, kèm nhật ký delta đã đọc>
 **Truy vết:** mỗi route/component/state/query key/file trong spec ghi `Theo: <ID Design Record>`. Phần tử không có ID để dẫn = quyết định thiết kế chưa có → dừng, quay `architecture-design`.
-**Spec version:** 1
+**Spec version:** 1 <!-- tăng 1 mỗi vòng REVISE, tối đa 3 -->
 
 > **Nhắc trước khi viết:** user **không đọc code frontend**, chỉ review giao diện. Spec này phải đủ để agent implement mà không đoán, và đủ để máy kiểm chứng — vì sẽ không có người đọc code để phát hiện sai.
 
@@ -93,7 +94,7 @@ Quy tắc áp dụng (F-5, `AGENTS.md` luật 23):
 - Còn lại (modal mở/đóng, draft text) → `useState` tại component gần nhất.
 - Context chỉ dùng cho auth. Cấm tạo store.
 
-Nếu spec thấy cần store → **dừng và hỏi user**, vì F-5 đã DECIDED là không store.
+Nếu spec thấy cần store → **dừng**, đưa vào gói quyết định (`.agents/references/decision-packet.md`), vì F-5 đã DECIDED là không store.
 
 ## 6. API client và contract
 
@@ -159,14 +160,16 @@ Theo thang 3 tầng (`frontend.md` §6). Không test tầng 3.
 
 - Story là **bề mặt review chính** của user. Mỗi màn hình phải có story phủ đủ 4 trạng thái ở §3.2.
 - Trạng thái phải tái tạo được bằng MSW handler, không bằng cách sửa code.
-- Ảnh review: `npm run shots` sinh `.artifacts/shots/<storyId>-desktop.png` và `-mobile.png`.
+- Ảnh review: `npm run shots` sinh `<storyId>-desktop.png` và `-mobile.png`, lưu bằng chứng ở `apps/lab-portal/docs/delivery/<TICKET-ID>/shots/`.
 - Component lẻ (Button, Card) chỉ cần 1 story default, không cần 4 trạng thái.
 
 ## 11. Tickets
 
 | ID | Outcome | Repo | Blocked by |
 |---|---|---|---|
-| <STORY-ID>-T1 | <...> | `apps/lab-portal` | — |
+| <STORY-ID>-T1 | <...> | `apps/lab-portal` | <BACKEND-STORY>-T<n> hoặc — |
+
+ID mang story con mà ticket phục vụ (kể cả khi spec gộp epic). Cột Blocked by chỉ chứa ticket ID (thường là ticket backend cấp endpoint), `SETUP-`/`MAINT-`/`EXP-` ID, hoặc `—`; prerequisite thiếu → tạo ticket qua `capture`.
 
 ### <STORY-ID>-T1 — <tên>
 
@@ -204,3 +207,4 @@ Theo thang 3 tầng (`frontend.md` §6). Không test tầng 3.
 - [ ] Không hex trực tiếp, không token tự bịa.
 - [ ] Không tạo store, không copy server data vào local state.
 - [ ] Ticket là vertical slice, không tách tầng.
+- [ ] `lab sync <SPEC-ID>` và `lab check` OK.

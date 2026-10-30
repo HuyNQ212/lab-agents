@@ -1,6 +1,7 @@
 # Checklist — spec-review (Pass 2), nhánh BACKEND
 
-> Bộ câu hỏi phản biện. Không phải nguồn luật: ràng buộc nằm ở `lab-docs/architecture/backend.md` §10 và `decision-ledger.md`.
+> Bộ câu hỏi phản biện. Không phải nguồn luật: ràng buộc nằm ở `lab-docs/architecture/backend.md` §10, `.agents/AGENTS.md` luật cứng 1–16, `lab-docs/frameworks/design-principles.md` và `lab-docs/decisions/decision-ledger.md`.
+> **Vi phạm luật cứng 1–16 hoặc luật L1–L7b tối thiểu là BLOCKER**, kể cả khi mục dưới đây ghi mức thấp hơn.
 > Dùng ở **Pass 2** của `spec-review`. Trục 1 (Boundary), 2 (Data ownership) và phần schema của trục 6 đã có quyết định trong Design Record → **đối chiếu ở Pass 1** (`references/conformance.md`); ở đây chỉ dùng như lưới an toàn khi Design Record chưa phủ, hoặc khi spec mâu thuẫn với chính nó.
 > `implement` cũng dùng file này làm tiêu chí review diff.
 > Mỗi mục: câu hỏi → dấu hiệu vi phạm → mức mặc định.
@@ -31,7 +32,7 @@
 - Status code khớp ngữ nghĩa: 400 validation, 401 thiếu/sai context, 403 thiếu quyền, 404 không tồn tại, 409 xung đột, 422 business rule?
 - Input validate bằng `z.strictObject`? → passthrough/unknown key = **MAJOR** (backend.md §10.1).
 - Date-only dùng `z.iso.date()` **và** có kiểm tra ngày hợp lệ (`2026-02-30`)? → thiếu kiểm tra business = **MAJOR**.
-- Có endpoint nào không phục vụ story nào? → **MINOR** (hoặc MAJOR nếu làm tăng bề mặt AuthZ).
+- Có endpoint nào không phục vụ story nào trong dòng `**Stories:**`? → **MAJOR** (khớp C10 trong `conformance.md`).
 - Response có phụ thuộc thứ tự mảng mà không khai báo sort? → **MINOR**.
 
 ## 4. Failure mode
@@ -49,8 +50,8 @@
 - Mọi endpoint có khai báo context yêu cầu (`UserContext`/`SystemContext`)? → thiếu = **BLOCKER**.
 - Có kiểm tra quyền trên **resource cụ thể** hay chỉ kiểm "đã đăng nhập"? → chỉ authenticated = **BLOCKER** nếu dữ liệu thuộc user khác.
 - `X-Lab-Context` do caller strip-and-set? → forward nguyên header từ client = **BLOCKER** (backend.md §10.3).
-- Có dùng `readRequestIdBestEffort` cho authz? → **BLOCKER** (backend.md §10.10, plan §9 B-3.18: chỉ dùng cho logging).
-- Có `userId: string | null`? → **MAJOR** (AGENTS.md luật 16, backend.md §10.3).
+- Có dùng `readRequestIdBestEffort` cho authz? → **BLOCKER** (`lab-docs/architecture/backend-reference.md`, mục `readRequestIdBestEffort`: chỉ dùng cho logging).
+- Có `userId: string | null`? → **BLOCKER** (AGENTS.md luật 16, backend.md §10.3).
 - Dev bypass (`ENVIRONMENT === 'local'`) có bị giới hạn đúng? → bypass theo header thay vì env = **BLOCKER**.
 
 ## 6. Schema D1
@@ -59,7 +60,7 @@
 - Timestamp là `INTEGER` epoch ms? → `TEXT` datetime, `CURRENT_TIMESTAMP`, `strftime('%s','now')` = **BLOCKER** (trả giây).
 - Date-only là `TEXT` + CHECK GLOB đúng format? → **BLOCKER**.
 - GLOB pattern ≤ 50 bytes? → vượt = **MAJOR** (giới hạn D1).
-- Index có tương ứng query thật trong spec? → index "phòng xa" = **MINOR**; query thường xuyên không index = **MAJOR**.
+- Mỗi index mới có câu SQL cụ thể + `EXPLAIN QUERY PLAN` + `rows_read` trước/sau, và phục vụ `UNIQUE`, khóa ngoại hoặc truy vấn đã biết? → thiếu, index "chuẩn bị trước", hoặc trùng cột đầu với index khác = **BLOCKER** (design-principles L6b). Query thường xuyên không index = **MAJOR**.
 - Có UNIQUE đúng nghiệp vụ (ví dụ một occurrence/ngày/event)? → thiếu = **MAJOR**.
 - Xoá dữ liệu: soft delete hay hard delete, đã chốt chưa? → chưa = **QUESTION**.
 - Migration forward-only, additive? `RENAME`/`DROP TABLE` = **BLOCKER** (backend.md §10.5).
@@ -72,17 +73,29 @@
 ## 7. Test seam
 
 - Mỗi AC có ít nhất một test case, hoặc ghi rõ thuộc ticket khác? → thiếu = **MAJOR**.
-- Test dùng D1 thật cho logic SQL/recurrence? → mock D1 = **MAJOR** (D-10).
+- Test dùng D1 thật cho logic SQL/recurrence? → mock D1 = **MAJOR** (backend.md §5.2; ledger: "D1 thật là mặc định").
 - Mock repo chỉ dùng cho lỗi DB khó gây/assert call? → mock thay thế test tích hợp = **MAJOR**.
 - Port external luôn mock? → gọi Brevo/Telegram thật trong test = **BLOCKER**.
-- Có cast `as unknown as` trong test? → **MAJOR** (§5.4).
-- Có E2E browser trong phạm vi spec? → **MINOR** (ngoài phạm vi D-3).
+- Có cast `as unknown as` trong test? → **MAJOR** (backend.md §5.4).
+- Có E2E browser trong phạm vi spec? → **MINOR** (backend.md §5.1: không E2E browser tự động).
 
 ## 8. Scope hygiene
 
 - Mọi ticket có `Blocked by` và repo? → thiếu = **MINOR**.
-- Có công nghệ mới ngoài ledger DECIDED? → **BLOCKER** nếu là hạ tầng (KV/Queues/DO/Redis); **MAJOR** nếu là thư viện.
+- Có công nghệ mới ngoài ledger DECIDED? → **BLOCKER** nếu là hạ tầng chưa DECIDED (KV/DO/Redis; Queues đã DECIDED 2026-10-27); **MAJOR** nếu là thư viện.
 - Spec có chép lại AC hoặc mô tả code từng dòng? → **MINOR**.
 - Có OPEN nào bị trả lời ngầm trong spec? → **MAJOR**.
 - Có ticket nào gộp nhiều outcome không liên quan? → **MINOR**.
 - Spec có lấn sang nội dung frontend (state, cache, trạng thái UI) không? → **MINOR**: nhắc user rằng phần đó thuộc `spec-frontend.md` và checklist frontend.
+
+## 9. Luật cứng code khi spec có mã mẫu
+
+Ở spec-review chỉ áp khi spec có mã/SQL mẫu; `implement` áp cho mọi diff. Mọi vi phạm = **BLOCKER** (`.agents/AGENTS.md`).
+
+- Ghi hàng loạt bằng vòng lặp từng câu thay vì `db.batch()`? (luật 9)
+- Repository factory dùng `this`? (luật 10)
+- `console.log` với template string thay vì `log(level, message, fields)`? (luật 11)
+- `error-handler.ts` dùng `c.get('deps')` thay vì `c.var.deps`? (luật 12)
+- `deps` cache ở module scope thay vì `createDeps(env, ctx)` mỗi request? (luật 13)
+- Dùng `Extract<RequestContext, ...>` thay vì named type + `if` narrowing? (luật 14)
+- Gọi public URL cho internal service call thay vì Service Binding? (luật 15)

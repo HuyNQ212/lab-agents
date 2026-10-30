@@ -1,53 +1,78 @@
 # Ship plan — template
 
-> Đầu ra Phase 0 của `ship`. Reviewer duyệt file này trước khi thực thi.
+> Đầu ra Phase 0 của `ship`, lưu tại `<dir>/specs/<SPEC-ID>-ship/ship-plan.md`. Reviewer context sạch duyệt file này trước khi thực thi.
 > Mục không áp dụng ghi "Không áp dụng — <lý do>". Không để trống.
 
-**Ngày:** <YYYY-MM-DD>
-**Người lập:** agent
-**Trạng thái:** DRAFT | REVIEWED | EXECUTING | DONE
+```markdown
+---
+id: <SPEC-ID>-ship
+type: ship-plan
+status: in-progress
+repos: [lab-user, lab-identity]
+parent: <SPEC-ID>
+---
+
+# Ship plan — <SPEC-ID>
+
+**Ngày:** <YYYY-MM-DD> · **Người lập:** agent
+
+## Tasks
+- [ ] T1: lập plan (Phase 0, 0b)
+- [ ] T2: plan review PASS (Phase 1)
+- [ ] T3: gate sau rebase xanh, PR tạo đủ, gói go/no-go được duyệt (Phase 2–3b)
+- [ ] T4: merge + tree hash khớp (Phase 4)
+- [ ] T5: migration remote + verify (Phase 5)
+- [ ] T6: deploy theo order + ghi version (Phase 6)
+- [ ] T7: verify production mọi dòng PASS (Phase 7)
+```
+
+Tick bằng `lab tick <SPEC-ID>-ship T<n>`; tick T7 thì script tự đặt `status: done`.
 
 ## 1. Phạm vi
 
-| Repo | Nhánh | Commit (hash) | Ticket | Đã push? |
+| Repo | Nhánh | Đầu nhánh (hash) | Ticket | Đã push? |
 |---|---|---|---|---|
-| `services/lab-planning` | `feat/PLN-001` | `<hash>` | PLN-001-T1..T3 | ✅/❌ |
-| `apps/lab-portal` | `feat/PLN-001-fe` | `<hash>` | PLN-001-T4 | ✅/❌ |
+| `services/lab-planning` | `feat/<SPEC-ID>` | `<hash>` | PLN-001-T1..T3 | ✅/❌ |
+| `apps/lab-portal` | `feat/<SPEC-ID>` | `<hash>` | PLN-001-T4 | ✅/❌ |
 
-Ticket nào **không** thuộc phạm vi ship lần này: <liệt kê hoặc "không có">
+Ticket **không** thuộc phạm vi ship lần này: <liệt kê hoặc "không có">
 
-## 2. Preconditions
+## 2. Preconditions (gồm Phase 0b)
 
-| Kiểm | Kết quả |
+| Kiểm | Lệnh | Kết quả |
+|---|---|---|
+| `gh` đã auth | `gh auth status` | ✅/❌ |
+| Đúng account Cloudflare | `npx wrangler whoami --json` | ✅/❌ account |
+| Working tree sạch mọi repo | `git status --porcelain` | ✅/❌ |
+| Remote có `main` | `git ls-remote --heads origin main` | ✅/❌ từng repo |
+| `database_id` không rỗng | `wrangler.jsonc` | ✅/❌ từng D1 |
+| Worker đích của mọi binding đã deploy | `npx wrangler deployments list --name <callee>` | ✅/❌ |
+| `entrypoint` của binding khớp export callee | `services[]` vs `src/index.ts` | ✅/❌ |
+| Script gate đủ, pin exact, có lockfile | `lab repo-gate <repo>` | ✅/❌ |
+| Node | `node -v` (khớp `engines` nếu repo có) | <version> |
+
+Mục ❌ nào cũng chặn: ghi ticket SETUP/MAINT đã tạo qua `capture` hoặc câu hỏi trong gói quyết định.
+
+## 3. Đồ thị binding, PR set và merge order
+
+| Worker | Gọi tới (`services[]`) |
 |---|---|
-| `gh` CLI có? | ✅/❌ version |
-| `gh auth status` | ✅/❌ |
-| Working tree sạch mọi repo? | ✅/❌ |
-| Repo nào behind `origin/main`? | <danh sách hoặc "không"> |
-| `node -v` khớp engines từng repo? | ✅/❌ |
-| Lockfile khớp `package.json`? | ✅/❌ |
-| Có range trôi nổi (`^`/`~`/`latest`)? | ✅ không có / ❌ có |
+| `<caller>` | `<callee>` |
 
-## 3. PR set và merge order
-
-| # | Repo | PR title | Base | Merge sau |
+| # | Repo | PR title | `tested-sha` | Merge sau |
 |---|---|---|---|---|
-| 1 | <callee repo> | `<TICKET>: <outcome>` | `main` | — |
-| 2 | <caller repo> | `<TICKET>: <outcome>` | `main` | PR #1 |
+| 1 | <callee repo> | `[<SPEC-ID>] <mô tả>` | `<sha>` | — |
+| 2 | <caller repo> | `[<SPEC-ID>] <mô tả>` | `<sha>` | PR #1 |
 
-**Lý do thứ tự:** <callee phải có trước vì caller gọi binding/field của nó>
+Merge: `gh pr merge <n> --rebase --match-head-commit <tested-sha> --delete-branch`. Không squash, không force push.
 
-Merge strategy: `gh pr merge --rebase --delete-branch`. Không squash.
+## 4. Gate
 
-## 4. Gate plan
-
-| Repo | format:check | lint | typecheck | test | build |
-|---|---|---|---|---|---|
-| <repo> | ✅ <date> | ✅ | ✅ | ✅ <n> test | ✅ <time> |
+| Repo | `lab repo-gate` lần cuối (sau rebase) | Test pass | Build |
+|---|---|---|---|
+| <repo> | ✅ <ngày giờ> | <n> test | ✅ <thời gian> |
 
 Output chi tiết đính vào PR body.
-
-Gate chạy **lại sau rebase** (Phase 3) — ghi ngày giờ lần chạy cuối: <...>
 
 ## 5. Migration set
 
@@ -55,59 +80,50 @@ Gate chạy **lại sau rebase** (Phase 3) — ghi ngày giờ lần chạy cu�
 |---|---|---|---|---|---|
 | 1 | `<DB>` | `0007_add_x.sql` | ✅ | ✅ | phải sau `0006` |
 
-**Nếu file fail giữa chừng, schema ở trạng thái nào?**
+**Nếu dừng giữa hai file, schema ở trạng thái nào:** <cụ thể; `migrations apply` rollback riêng file lỗi, file trước giữ nguyên>
 
-<Trả lời cụ thể. Không trả lời được = BLOCKER cho plan này.>
+**Bookmark trước migrate:** `npx wrangler d1 time-travel info <DB> --json` → <bookmark, thời điểm> (ghi lúc chạy)
 
-**Cách phục hồi:**
+**Đường lùi:** restore bookmark (user quyết) hoặc migration bù qua `to-spec`.
 
-<Migration bù, hoặc reset local, hoặc bước thủ công. Migration là forward-only nên không có rollback thật.>
+## 6. Deploy set và secret
 
-**Backup:** <lệnh export D1, đường dẫn file, thời điểm>
+| # | Worker | Phụ thuộc vào | Version hiện tại (rollback) | Code cũ chạy được với schema mới? |
+|---|---|---|---|---|
+| 1 | `<callee>` | — | `<id>` | ✅ additive |
+| 2 | `<caller>` | `<callee>` | `<id>` | ✅ |
+| 3 | `apps/lab-portal` | mọi BE | `<id>` | — |
 
-## 6. Deploy set
+| Worker | Khóa `envVarSchema` | Có trong `secret list` / `vars`? |
+|---|---|---|
+| `<worker>` | `ENVIRONMENT` (= `production`), `<KEY>` | ✅/❌ |
 
-| # | Worker | Phụ thuộc vào | Version ID hiện tại (để rollback) |
-|---|---|---|---|
-| 1 | `<callee>` | — | `<id>` |
-| 2 | `<caller>` | `<callee>` | `<id>` |
-| 3 | `apps/lab-portal` (static) | tất cả BE | `<id>` |
-
-`check-env.ts` sẽ chạy trước mỗi lần deploy. Secret cần có: <danh sách tên, không giá trị>
+Chỉ ghi tên khóa, không ghi giá trị.
 
 ## 7. Risk list — bước không hoàn tác được
 
-| # | Bước | Không hoàn tác vì | Đường lùi |
-|---|---|---|---|
-| 1 | Migration remote | Forward-only | Migration bù mới |
-| 2 | Deploy Worker | Version cũ bị thay | `wrangler rollback` về version ID đã ghi |
-| 3 | Merge PR | Đã vào `main` | Revert commit (nếu chưa deploy) |
+| # | Bước | Lệnh | Verify ngay sau | Đường lùi |
+|---|---|---|---|---|
+| 1 | Merge PR | `gh pr merge ...` | tree hash | Dừng trước migrate/deploy; sửa qua ticket mới |
+| 2 | Migration remote | `npx wrangler d1 migrations apply <DB> --remote` | `migrations list --remote` | Restore bookmark (user quyết) / migration bù |
+| 3 | Deploy Worker | `npx wrangler deploy --message "<SPEC-ID>-ship"` | `deployments status --json` | `npx wrangler rollback <version-id> --name <worker> --yes` |
 
-## 8. Verify plan sau khi xong
+## 8. Verify plan
 
-| Kiểm | Kỳ vọng |
-|---|---|
-| Tree hash `main` == tested tree | Bằng nhau, ghi cả hai hash |
-| Health endpoint | <path> → 200 |
-| `requestId` trong log | Có |
-| Contract response | Khớp zod schema FE |
-| FE tải được | Không màn hình trắng, đúng version |
-| Migration | Query trên bảng vừa đổi trả dữ liệu |
-
-## 9. Điểm cần user xác nhận
-
-| # | Điểm dừng | Đã xác nhận? |
+| Kiểm | Lệnh | PASS khi |
 |---|---|---|
-| 1 | Duyệt PR (hết Phase 3) | ⬜ |
-| 2 | Migration remote (trước Phase 5) | ⬜ |
-| 3 | Deploy production (trước Phase 6) | ⬜ |
+| Tree hash | `git rev-parse origin/main^{tree}` vs `<tested-sha>^{tree}` | bằng nhau |
+| Health | `curl ... <url>/health` | `200` |
+| Version | `npx wrangler deployments status --name <worker> --json` | = version mới |
+| `requestId` + lỗi | `npx wrangler tail <worker> --format json` | có `requestId`, 0 entry lỗi |
+| Contract | gọi `<endpoint>`, zod parse | parse thành công |
+| Migration | `npx wrangler d1 migrations list <DB> --remote` | không còn migration chờ |
+| FE | `curl -s <portal-url>/` | `200`, asset khớp `dist/` |
 
-## 10. ESCALATE đang chờ
-
-Finding từ `implement` chưa giải, cần user quyết trước khi ship:
+## 9. ESCALATE đang chờ
 
 | # | Finding | Vì sao chặn ship |
 |---|---|---|
 | — | <hoặc "không có"> | — |
 
-Nếu có mục này **và** nó ảnh hưởng nội dung ship → dừng, không ship.
+Có mục ảnh hưởng nội dung ship → không hỏi go, dừng.

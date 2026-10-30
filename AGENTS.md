@@ -112,7 +112,7 @@ Vì vậy: chất lượng code FE phải bảo đảm **bằng máy**, không b
 
 27. **Storybook là bề mặt review UI.** Mỗi màn hình và mỗi component có ≥3 trạng thái phải có story phủ default / loading / empty / error.
 28. **MSW handler là nguồn mock DUY NHẤT.** Đặt ở `features/<name>/mocks.ts`, export bộ có tên (`happy`, `empty`, `error`, `slow`). Story và test **cùng** lấy từ đây; cấm viết mock thứ hai.
-29. **Ảnh review: `npm run shots`** — Playwright script đọc `index.json` của Storybook, chụp mọi story ở desktop 1280 và mobile 390, ghi ra `.artifacts/shots/`. **Cấm dùng Playwright MCP để điều hướng Storybook** (tốn token, không tất định). MCP chỉ dùng để smoke chức năng thật trên app đang chạy.
+29. **Ảnh review: `npm run shots`** — Playwright script đọc `index.json` của Storybook, chụp mọi story ở desktop 1280 và mobile 390, ghi ra `docs/delivery/<TICKET-ID>/shots/<storyId>-<desktop|mobile>.png` trong repo (chuẩn ở `lab-docs/frameworks/documentation-standards.md` §2). **Cấm dùng Playwright MCP để điều hướng Storybook** (tốn token, không tất định). MCP chỉ dùng để smoke chức năng thật trên app đang chạy.
 
 **Chọn version**
 
@@ -124,8 +124,10 @@ Mọi file theo dõi trong `lab-docs` có frontmatter `id/type/status/repos/pare
 
 - **Báo tiến độ = `node .agents/scripts/lab.mjs status`.** Cấm đọc hàng chục file để tổng hợp tay.
 - **Trước khi commit mọi thay đổi file theo dõi = `node .agents/scripts/lab.mjs check`.**
-- Đánh xong task = `lab tick <ID> <Tn>`; đánh xong cả file = `lab done <ID>` (chặn nếu còn task mở). Không sửa tay status `done`.
+- Spec có bảng Tickets: `lab sync <SPEC-ID>` sinh progress.md; xong ticket = `lab tick <TICKET-ID>` (story tự dẫn xuất status). File có `## Tasks` riêng: `lab tick <ID> <Tn>`, xong cả file = `lab done <ID>`. Không sửa tay status `done`. Commit lab-docs = `lab commit <ID> "<mô tả>" [--push]`. Bảng lệnh đầy đủ: `lab-docs/frameworks/documentation-standards.md` §0b.
 - Việc lộ ra ngoài ticket → skill `capture` xếp vào story có sẵn hoặc ticket nhỏ `SETUP-/MAINT-/EXP-`.
+- Chạy cả chuỗi = skill `orchestrate`. Hook `skill-gate.mjs` chạy `lab check` + `lab gate <skill> <ID>` trước mỗi skill trong chuỗi; lệnh production không hoàn tác được luôn hỏi user (hook `bash-guard.mjs`). Hợp đồng bàn giao giữa skill: `.agents/skills/README.md`.
+- Hỏi user = một gói quyết định theo `.agents/references/decision-packet.md`, không hỏi rải rác.
 
 ## Quy tắc làm việc
 
@@ -144,7 +146,7 @@ Mọi file theo dõi trong `lab-docs` có frontmatter `id/type/status/repos/pare
 9. **Tài liệu tách theo phía:** spec và checklist của backend và frontend để **hai file riêng**. Không gộp, không dùng template phía này cho phía kia.
 10. **Lưu trữ artifact theo chuẩn** `lab-docs/frameworks/documentation-standards.md`:
     - Quyết định/spec → `lab-docs` (`specs/<ID>/`), bằng chứng thực thi → `<repo>/docs/delivery/<ID>/`, hai lớp không trộn.
-    - **Mọi việc đều có ID.** Việc không có trong `stories.md` đi qua skill `capture` → story có sẵn hoặc ticket nhỏ `SETUP-/MAINT-/EXP-` với `ticket.md` một trang.
+    - **Mọi việc đều có ID.** Việc không có trong `stories/<ID>.md` đi qua skill `capture` → story có sẵn hoặc ticket nhỏ `SETUP-/MAINT-/EXP-` với `ticket.md` một trang.
     - Ticket chạm nhiều repo vẫn **một file một ID** trong `lab-docs`; trường `repos` liệt kê hết, bằng chứng mỗi repo nằm trong repo đó.
     - Bằng chứng (gate, đo đạc query, triage, ảnh chụp) **phải commit và merge vào `main` cùng PR** — bằng chứng nằm trên nhánh đã xóa thì bằng không.
     - Bằng chứng không sửa sau khi ghi, chỉ append. Spec sai thì sửa spec trong `lab-docs`, không sửa bằng chứng.

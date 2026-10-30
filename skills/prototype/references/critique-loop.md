@@ -25,10 +25,10 @@ Nó không biết bạn vừa cân nhắc gì, nên nó phê được.
 
 ```bash
 node .agents/scripts/lint-prototype.mjs        # chặn cứng, phải pass trước
-node .agents/scripts/shots.mjs                 # 18 ảnh: desktop + mobile + mọi trạng thái
+node .agents/scripts/shots.mjs                 # mọi trang × trạng thái × width trong shots.json
 ```
 
-Nếu vừa sửa một trang:
+Nếu vừa sửa một trang (không chạm `shared/`):
 
 ```bash
 node .agents/scripts/shots.mjs --only planning --width 390
@@ -36,7 +36,7 @@ node .agents/scripts/shots.mjs --only planning --width 390
 
 ### 2. Chọn ảnh để phê
 
-Không phê cả 18 ảnh mỗi vòng — tốn và loãng. Chọn theo thứ tự ưu tiên:
+Không phê cả bộ ảnh mỗi vòng — tốn và loãng. Chọn theo thứ tự ưu tiên:
 
 1. Trang **mới nhất / vừa sửa**
 2. Width **390** trước (lỗi bố cục lộ rõ nhất ở hẹp)
@@ -50,12 +50,13 @@ Không phê cả 18 ảnh mỗi vòng — tốn và loãng. Chọn theo thứ t�
 
 | Ràng buộc | Giá trị | Vì sao |
 |---|---|---|
-| Loại agent | `Explore`/`Ask` (read-only) | Agent full-tool sẽ đi grep/đọc source/chạy script — đúng thứ bị cấm, và là lý do một việc 30 giây phình thành 13 phút |
+| Loại agent | `Explore` (read-only) | Agent full-tool sẽ đi grep/đọc source/chạy script — đúng thứ bị cấm, và là lý do một việc 30 giây phình thành 13 phút |
 | Số ảnh | **2–3**, chọn theo bước 2 | Ảnh full-res là token đắt nhất; 6 ảnh làm loãng phán đoán |
 | Chạy | **Foreground**, chờ trong cùng lượt | Không bàn giao "đang chờ" cho user; agent nền kẹt thì không ai biết |
-| Ngân sách | **~2 phút**. Quá 2 phút hoặc thấy nó gọi tool ngoài `Read` → dừng ngay (`TaskStop`), tự phê bằng mắt | Việc bounded mà chạy dài = đã lạc scope; kéo dài không làm kết quả tốt hơn |
+| Ngân sách | **~2 phút**, giữ bằng prompt: chỉ `Read` đúng các ảnh đã cho và checklist, tối đa 5 finding | Agent foreground chặn main agent tới lúc trả về, nên không đo giờ hay dừng giữa chừng được; giới hạn phải nằm trong prompt |
+| Kết quả lạc phạm vi | Kết quả cho thấy sub-agent đã đọc HTML/CSS/JS hoặc chạy lệnh → bỏ cả vòng đó, tự phê bằng ảnh | Finding dựa trên code là phê code, không phải phê giao diện |
 
-Nếu vì bất kỳ lý do gì phải dùng agent khác `Explore`, nêu rõ lý do với user **trước khi** spawn.
+Không dùng agent khác `Explore`. Phiên không có `Explore` thì tự phê bằng ảnh và ghi rõ trong gói bàn giao rằng vòng đó không có sub-agent.
 
 Giao đúng ngần này, không giao thêm:
 
@@ -86,7 +87,7 @@ Mỗi finding gắn nhãn:
 
 - **ACCEPT** — đúng, sửa ngay
 - **REJECT** — sai hoặc không áp dụng; ghi lý do vào báo cáo cuối
-- **ESCALATE** — đúng nhưng sửa sẽ đổi hành vi đã chốt với user → hỏi user
+- **ESCALATE** — đúng nhưng sửa sẽ đổi hành vi đã chốt với user → không sửa, đưa thành một câu hỏi trong gói quyết định ở bước duyệt
 
 Chỉ sửa ACCEPT. Không sửa REJECT vì "thấy cũng hợp lý" — đó là cách tiêu một vòng.
 
@@ -96,14 +97,14 @@ Sửa → `shots` lại → nhìn ảnh đã sửa. **Kiểm bằng dữ liệu 
 gắn mã phải đối chiếu số đo (đo pixel, đếm DOM) — reviewer đọc ảnh có thể sai về tỷ lệ thanh,
 nhầm ảnh có/không có. Không cần sub-agent cho mọi lần; một vòng sub-agent cho mỗi 2–3 lần sửa.
 
-**Sửa `shared/` thì phải kiểm lại bằng browser thật.** `shots.mjs` mở context mới nên luôn
+**Sửa `shared/` thì chụp lại toàn bộ và kiểm bằng browser thật.** Chạy `shots.mjs` không có `--only` (shell đổi là mọi trang đổi), và liệt kê trong gói bàn giao các mục `## <PREFIX>` đã APPROVED bị ảnh hưởng để user xác nhận lại. `shots.mjs` mở context mới nên luôn
 thấy bản cuối; tab của user thì không. Sau khi đổi `shared/shell.{js,css}`, mở trang bằng
 Playwright, đọc `getComputedStyle` + `textContent` của control vừa sửa, và nếu đổi markup
 icon-only thì xác nhận `textContent === ''`. Kèm cache-busting `?v=<hash>` khi nhúng
 `shared/` nếu cần, hoặc nhắc user hard-refresh trước khi kết luận là xong.
 
-**Trần 3 vòng sub-agent.** Hết 3 vòng còn lỗi lớn → dừng, báo user kèm danh sách
-lỗi chưa giải và lý do. Không tự lặp tiếp: vòng lặp mở là thứ Lab cấm ở mọi
+**Trần 3 vòng sub-agent.** Hết 3 vòng còn lỗi lớn → dừng, đưa danh sách lỗi chưa giải
+và lý do vào gói quyết định. Không tự lặp tiếp: vòng lặp mở là thứ Lab cấm ở mọi
 skill khác, prototype không được ngoại lệ.
 
 ## Lỗi thật mà cơ chế này đã bắt được
@@ -153,6 +154,7 @@ Trang tự xử lý state riêng, ví dụ `planning.html`:
 | `empty` | Không có sự kiện nào |
 | `archived` | Có một sự kiện đã lưu trữ |
 | `create` | Mở sẵn modal tạo, điền dữ liệu mẫu |
+| `detail` | Mở vùng chi tiết, mở sẵn ô thêm việc con (ảnh mobile) |
 
 Thêm state mới thì cập nhật `lab-prototype/shots.json` cùng lúc — state không
 có trong manifest là state không ai review.

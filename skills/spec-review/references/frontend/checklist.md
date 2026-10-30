@@ -4,6 +4,7 @@
 > Dùng ở **Pass 2** của `spec-review`. Trục 2 (State ownership) và cấu trúc component/file đã có quyết định trong Design Record → **đối chiếu ở Pass 1** (`references/conformance.md`); ở đây chỉ dùng như lưới an toàn khi Design Record chưa phủ, hoặc spec mâu thuẫn với chính nó.
 > `implement` cũng dùng file này làm tiêu chí review diff.
 > Không phải nguồn luật: ràng buộc nằm ở `lab-docs/architecture/frontend.md` §0/§5/§6 và `.agents/AGENTS.md` luật 17–30.
+> **Vi phạm luật cứng 17–30 tối thiểu là BLOCKER**, kể cả khi mục dưới đây ghi mức thấp hơn.
 > Mỗi mục: câu hỏi → dấu hiệu vi phạm → mức mặc định.
 
 ## Nguyên tắc gốc — đọc trước mọi trục
@@ -95,7 +96,7 @@ Trục này thay thế vai trò review code đã mất. Thiếu ở đây nghĩa
 
 ## 8. Giao diện và tính nhất quán
 
-- Có hex trực tiếp trong khi đã có token? → **MAJOR** (luật 17; đổi palette sẽ bỏ sót).
+- Có hex trực tiếp trong khi đã có token? → **BLOCKER** (luật 17; đổi palette sẽ bỏ sót).
 - Token mới có được đề xuất như delta rõ ràng, hay bịa giá trị? → bịa = **MAJOR**.
 - Route có nested tab không? → **MAJOR** (trái Direct-first, `frontend.md` §2).
 - Form: label có luôn hiển thị? → placeholder-as-label = **MAJOR** (mất label khi có nội dung).
@@ -112,3 +113,16 @@ Trục này thay thế vai trò review code đã mất. Thiếu ở đây nghĩa
 - Có endpoint/thư viện nào được thêm mà không story nào cần? → **MINOR**.
 - Có OPEN nào bị trả lời ngầm trong spec không? → **MAJOR**.
 - Spec có chép lại AC hoặc mô tả code từng dòng không? → **MINOR**.
+
+## 10. Luật cứng chưa có ở trục trên
+
+Mọi vi phạm = **BLOCKER** (`.agents/AGENTS.md`). Ở spec-review áp cho cây file, danh sách dependency và mã mẫu trong spec; `implement` áp cho mọi diff.
+
+- Có `tailwind.config.js`, hoặc token khai ở nhiều hơn một file CSS `@theme`? (luật 17)
+- Route lồng nhau/nested tab, hoặc search params không typed/validate bằng zod? (luật 18)
+- Tự viết hook fetch/cache thay vì TanStack Query 5? (luật 19)
+- Dùng axios hoặc thư viện HTTP khác thay vì fetch wrapper ở `src/shared/api/`? (luật 20)
+- Form không dùng react-hook-form + `@hookform/resolvers` + zod, hoặc validate bằng HTML attribute khi đã có zod schema? (luật 22)
+- Mock thứ hai ngoài `features/<name>/mocks.ts` (thiếu bộ `happy`/`empty`/`error`/`slow`)? (luật 28)
+- Ảnh review không qua `npm run shots`, hoặc dùng Playwright MCP để điều hướng Storybook? (luật 29)
+- Version không pin exact (`^`/`~`), hoặc thiếu lockfile? (luật 30)

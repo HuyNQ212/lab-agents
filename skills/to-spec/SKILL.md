@@ -1,9 +1,11 @@
 ---
 name: to-spec
-description: "Viết Technical Spec + ticket list cho một story hoặc epic Lab đã breakdown. Có hai nhánh riêng — backend (data model, API contract, service boundary, migration) và frontend (UI surface, data fetching, state ownership, form, test 3 tầng, story). Dùng khi user yêu cầu \"spec\", \"technical spec\", \"viết spec cho PLN-001/SEC-1\". Không dùng để viết lại stories/AC hay để code."
+description: "Viết Technical Spec + ticket list cho một story hoặc epic Lab đã breakdown và có Design Record FROZEN. Có hai nhánh riêng — backend (data model, API contract, service boundary, migration) và frontend (UI surface, data fetching, state ownership, form, test 3 tầng, story). Cũng dùng để sửa spec khi review.md có verdict NEEDS-WORK hoặc BLOCK. Dùng khi user hoặc orchestrate yêu cầu \"spec\", \"technical spec\", \"viết spec cho PLN-001/PLN-E01\", \"sửa spec theo review\". Không dùng để viết lại stories/AC, để quyết thiết kế hay để code."
 metadata:
   short-description: "Story → Technical Spec + tickets (backend hoặc frontend)"
 ---
+
+Đọc trước: `.agents/AGENTS.md`, hợp đồng bàn giao ở `.agents/skills/README.md` (dòng `to-spec` và quy tắc SPEC-ID). Hỏi user chỉ qua `.agents/references/decision-packet.md`.
 
 # to-spec — Story → Technical Spec
 
@@ -18,17 +20,19 @@ Biến story đã publish thành spec kỹ thuật đủ để một agent imple
 
 Lý do tách: hai phía có tiêu chí khác nhau. Backend tối ưu cho **dễ review bằng mắt**; frontend tối ưu cho **khó sai vì không ai review code**. Gộp chúng vào một template sẽ khiến một mục bị hiểu sai theo nghĩa của phía còn lại.
 
-Story chạm cả hai phía → viết **hai spec**, đặt cạnh nhau trong cùng thư mục product. Không gộp thành một file.
+Story chạm cả hai phía → viết **hai spec**, đặt cạnh nhau trong cùng thư mục `specs/<SPEC-ID>/`. Không gộp thành một file.
 
 ## Ranh giới
 
 | Việc | Skill này | Không phải việc của skill này |
 |---|---|---|
-| Behavior, AC | đọc và ánh xạ, không viết lại | `delivery-breakdown` |
+| Behavior, AC | đọc và ánh xạ, không viết lại | `breakdown` |
 | Quyết định công nghệ | trích từ `decision-ledger` | user |
-| Code, migration file, component | không tạo | `implement-backend` / `implement-frontend` |
+| Code, migration file, component | không tạo | `implement` |
 | Quyết định schema, ranh giới service, tách module/component, state ownership | **đọc từ Design Record, không quyết** | `architecture-design` |
 | Kiểm spec bám Design Record, phản biện failure/AuthZ/UX | nêu câu hỏi, không tự chốt | `spec-review` |
+| Đổi `**Status:**` thành REVIEWED | không làm | `spec-review` (sau PASS + user duyệt) |
+| Prerequisite ngoài story (bootstrap repo, hạ tầng test) | không viết vào spec | `capture` → ticket `SETUP-`/`MAINT-` |
 
 Không tạo GitHub Issue. Không đánh số lại story ID. Không nâng PROPOSED/DEFERRED/OPEN thành DECIDED.
 
@@ -37,14 +41,14 @@ Không tạo GitHub Issue. Không đánh số lại story ID. Không nâng PROPO
 ### Chung
 
 0. **Design Record FROZEN** của cụm: `lab-docs/products/<product>/design-backend.md` và/hoặc `design-frontend.md` (hoặc `lab-docs/platform/<cap>/`), kèm nhật ký delta. **Bắt buộc, đọc trước hết.** Spec là chuyển Design Record thành hợp đồng cho agent implement — **không phải nơi quyết định thiết kế**.
-1. `lab-docs/products/<product>/stories.md` hoặc `lab-docs/platform/<cap>/stories.md` — story, AC, DEFERRED/OPEN.
+1. `<dir>/stories/<ID>.md` của từng story trong phạm vi (và `stories/<EPIC-ID>.md` khi spec theo epic) — story, AC, DEFERRED/OPEN. `<dir>` = `lab-docs/products/<tên>/` hoặc `lab-docs/platform/<tên>/`.
 2. `lab-docs/decisions/decision-ledger.md` — chỉ dòng DECIDED là ràng buộc.
-3. `lab-docs/frameworks/engineering-workflow.md` §2 — định nghĩa nội dung spec.
+3. `lab-docs/frameworks/engineering-workflow.md` §3 — định nghĩa nội dung spec.
 
 ### Nhánh backend — đọc thêm
 
-4. `lab-docs/products/<product>/db-schema.md` — schema hiện có.
-5. `lab-docs/architecture/backend.md` **§10** — ràng buộc B-1→B-8; lệch thì file này thắng.
+4. `<dir>/db-schema.md` — schema hiện có.
+5. `lab-docs/architecture/backend.md` **§10** (10.1 → 10.11) — ràng buộc backend; lệch thì file này thắng.
 6. `lab-docs/architecture/system-overview.md` — service nào sở hữu dữ liệu gì, chiều Service Binding.
 7. `lab-docs/architecture/iam.md` — khi spec có endpoint hoặc kiểm quyền.
 8. `lab-docs/architecture/backend-reference.md` — chỉ đọc mục lục để trỏ đúng section mẫu code; **không copy code**.
@@ -59,7 +63,7 @@ Không tạo GitHub Issue. Không đánh số lại story ID. Không nâng PROPO
 
 ## Blocker phải dừng
 
-Dừng và báo user, không tự lấp:
+Không tự lấp. Blocker thiết kế quay về `architecture-design` (xem cuối mục); blocker cần user quyết gom vào **một** gói quyết định (`.agents/references/decision-packet.md`) rồi dừng.
 
 **Backend**
 - `db-schema.md` còn `PLACEHOLDER` hoặc thiếu bảng/cột cho delta của story.
@@ -72,30 +76,47 @@ Dừng và báo user, không tự lấp:
 - Story mô tả hành vi giao diện nhưng chưa rõ trạng thái loading/empty/error → cần user quyết, không tự nghĩ.
 - Màn hình cần một state mà F-5 không cho chỗ đặt (không server, không URL, không local hợp lý) → đây là tín hiệu phải hỏi lại F-5, không tự thêm store.
 - Cần semantic color / token chưa có giá trị → đánh dấu delta token, không tự đặt hex.
-- Story cần component phức tạp đòi thư viện mới → hỏi user trước, không tự cài.
+- Story cần component phức tạp đòi thư viện mới → đưa vào gói quyết định, không tự cài.
 
 **Chung**
-- Story còn DRAFT hoặc AC mâu thuẫn nhau.
+- Story `status: abandoned`, hoặc AC mâu thuẫn nhau.
 - **Không có Design Record FROZEN phủ story** (chưa có, còn DRAFT, hoặc không phủ phần story cần).
 - Spec cần một quyết định mà Design Record không có: cơ chế, cấu trúc file, state, ranh giới, cột/bảng. **Không tự quyết, không tạo workaround để "cho spec đủ".**
 
-Gặp các blocker thiết kế (Design Record thiếu, schema thiếu, quyết định chưa có): đề xuất chạy **`architecture-design`** — FULL nếu thuộc cụm mới, LITE nếu chỉ thêm delta nhỏ — rồi quay lại `to-spec`. Không viết spec dựa trên thiết kế tự đoán.
+Gặp các blocker thiết kế (Design Record thiếu, schema thiếu, quyết định chưa có): dừng và trả về **`architecture-design`** — FULL nếu thuộc cụm mới, LITE nếu chỉ thêm delta nhỏ — rồi quay lại `to-spec`. Không viết spec dựa trên thiết kế tự đoán.
+
+Thiếu prerequisite không thuộc story nào (repo chưa bootstrap, chưa có hạ tầng test, chưa có binding): không phải blocker dừng. Tạo ticket qua skill **`capture`** (`SETUP-<n>`/`MAINT-<n>`), rồi ghi ID đó vào cột `Blocked by` của ticket cần nó.
+
+## SPEC-ID và header
+
+- **Đầu vào** là ID story hoặc epic. **SPEC-ID** là tên thư mục `specs/<SPEC-ID>/`: mã story khi spec cho một story, mã epic (`PLN-E01`) khi gộp cả epic, mã cụm (`NTF`, `SEC`) khi gộp nhiều epic. Thư mục đã có spec phủ story này → sửa trong thư mục đó, không tạo SPEC-ID mới.
+- Header mỗi spec, đúng chữ để `lab` đọc được:
+  - `**Status:** DRAFT` — to-spec **luôn** ghi DRAFT, không bao giờ ghi REVIEWED. Spec không có frontmatter (frontmatter `status:` sẽ đè dòng này khi gate đọc).
+  - `**Stories:** <ID>, <ID>, ...` — liệt kê **mọi** story spec phủ; đây là nguồn duy nhất cho biết spec phủ story nào.
+  - `**Spec version:** <n>` — 1 khi viết mới, tăng 1 mỗi vòng REVISE.
+- Bảng `## <n>. Tickets`, cột đúng `| ID | Outcome | Repo | Blocked by |`:
+  - ID dạng `<STORY>-T<n>` (`PLN-001-T1`), mang ID **story con** mà ticket phục vụ, kể cả khi spec gộp epic. Không dùng ID epic hay mã cụm cho ticket. ID không trùng với spec khác.
+  - Cột Repo ghi `services/<tên>` hoặc `apps/<tên>`.
+  - Cột Blocked by chỉ chứa ID ticket `<STORY>-T<n>`, ID `SETUP-`/`MAINT-`/`EXP-`, hoặc `—`. Điều kiện bằng chữ không được gate kiểm → cấm.
 
 ## Quy trình
 
+### 0. GATE
+
+Chạy `node .agents/scripts/lab.mjs gate to-spec <ID>` (hook `skill-gate.mjs` cũng chạy). FAIL vì thiếu Design Record FROZEN → `architecture-design` trước. Phía nào có Design Record chưa FROZEN thì không viết spec phía đó.
+
 ### 1. DISCOVER
 
-- Liệt kê story ID + AC liên quan, kèm DEFERRED/OPEN của chúng.
+- Liệt kê story ID + AC liên quan, kèm DEFERRED/OPEN của chúng. Chọn SPEC-ID theo mục trên.
 - **Xác định nhánh:** story chạm backend, frontend, hay cả hai.
 - Backend: xác định service/repo sở hữu từng dữ liệu; ghi rõ chiều gọi; đối chiếu AC với schema.
 - Frontend: xác định route, màn hình, và với mỗi màn hình liệt kê đủ trạng thái default/loading/empty/error. Đối chiếu với endpoint có thật trong backend spec.
 - Tra ledger cho từng quyết định kỹ thuật sẽ dùng.
+- Kiểm prerequisite repo (repo có tồn tại, có gate `lab repo-gate <repo>` chạy được, có hạ tầng test). Thiếu → `capture` tạo `SETUP-`/`MAINT-`.
 
-### 2. SCOPE CONFIRM
+Không dừng chờ xác nhận phạm vi. Chỉ dừng khi gặp blocker ở mục trên.
 
-Trình bày ngắn: story nào, nhánh nào, service/route nào, delta ước tính, blocker, câu hỏi cần user quyết. Chờ xác nhận trước khi viết spec đầy đủ — trừ khi user đã nói rõ "viết luôn".
-
-### 3. DRAFT SPEC
+### 2. DRAFT SPEC
 
 Dùng template của **đúng nhánh**. Mọi mục phải có nội dung hoặc ghi "Không áp dụng — <lý do>".
 
@@ -106,31 +127,45 @@ Dùng template của **đúng nhánh**. Mọi mục phải có nội dung hoặc
 - Cần đổi một quyết định? Không sửa trong spec — quay về `architecture-design` (LITE delta) rồi tiếp.
 - `spec-review` sẽ đối chiếu spec với Design Record; chỗ nào không truy vết được sẽ bị báo.
 
-### 4. REVIEW
+Với nhánh frontend: spec chỉ rõ story nào dùng để xem trạng thái nào, vì user sẽ duyệt **giao diện**, không duyệt code.
 
-Đưa draft cho user, nêu riêng danh sách OPEN. Chỉ ghi file sau khi user duyệt.
+### 3. WRITE
 
-Với nhánh frontend, nhắc rõ: user sẽ review **giao diện**, không review code. Nên trong lúc review, chỉ ra story nào sẽ dùng để xem trạng thái nào.
-
-### 5. WRITE
-
-Đặt file trong **thư mục ID** (`specs/<ID>/`), đúng chuẩn `lab-docs/frameworks/documentation-standards.md` §2:
+Đặt file trong thư mục SPEC-ID, đúng chuẩn `lab-docs/frameworks/documentation-standards.md` §2:
 
 | Nhánh | Đường dẫn |
 |---|---|
-| Backend | `lab-docs/products/<product>/specs/<ID>/spec-backend.md` hoặc `lab-docs/platform/<cap>/specs/<ID>/spec-backend.md` |
-| Frontend | `…/specs/<ID>/spec-frontend.md` (cùng thư mục ID với backend) |
+| Backend | `<dir>/specs/<SPEC-ID>/spec-backend.md` |
+| Frontend | `<dir>/specs/<SPEC-ID>/spec-frontend.md` (cùng thư mục với backend) |
 
-Sửa file đã có thay vì tạo file trùng. Đọc lại file sau khi ghi.
+Sửa file đã có thay vì tạo file trùng. Không ghi `progress.md` tay. Sau khi ghi, chạy theo thứ tự, lệnh nào lỗi thì sửa spec rồi chạy lại:
 
-### 5b. Ticket nhỏ — không phải story/epic
+```bash
+node .agents/scripts/lab.mjs sync <SPEC-ID>      # sinh/cập nhật specs/<SPEC-ID>/progress.md từ bảng Tickets
+node .agents/scripts/lab.mjs check               # phải OK
+node .agents/scripts/lab.mjs commit <SPEC-ID> "spec DRAFT v<n>"   # chỉ commit file thuộc SPEC-ID trong lab-docs
+```
 
-Việc lộ ra ngoài `stories.md` thường đi qua skill **`capture`** trước — nó quyết định xếp vào story có sẵn hay sinh ticket nhỏ. Khi tự viết ticket nhỏ:
+`lab sync` báo "không có bảng Tickets parse được" → heading hoặc cột bảng sai, sửa theo mục SPEC-ID và header.
 
-- Thay spec bằng **`ticket.md` một trang** theo template trong `capture/SKILL.md` §2 (frontmatter `id/type/status/repos/parent` + khối Tasks).
-- ID tiền tố reserved: `SETUP-`, `MAINT-`, `EXP-` — kiểm trùng bằng `lab status` trước khi đặt.
-- File theo dõi phải có frontmatter chuẩn (§0) để vào bảng `lab status`.
-- Gate không được miễn.
+Không có điểm duyệt user ở to-spec. User duyệt **một lần**, sau khi `spec-review` PASS — `spec-review` gửi gói quyết định và đổi `**Status:**` thành REVIEWED.
+
+### 4. REVISE — khi review.md chưa PASS
+
+Vào bước này khi `specs/<SPEC-ID>/review.md` có `verdict: NEEDS-WORK` hoặc `verdict: BLOCK`.
+
+1. Đọc mọi finding trong `review.md`. Không sửa `review.md`.
+2. Finding sửa được trong phạm vi spec (thiếu trạng thái, thiếu test, truy vết sai, ticket không vertical) → sửa spec.
+3. Finding đòi đổi quyết định thiết kế → không sửa trong spec; trả về `architecture-design` LITE, xong mới sửa spec.
+4. Finding là câu hỏi cho user → giữ nguyên, `spec-review` gom vào gói quyết định; không tự trả lời.
+5. Tăng `**Spec version:**`, giữ `**Status:** DRAFT`. Spec đang REVIEWED mà phải sửa → đưa về DRAFT.
+6. Chạy lại bước 3 (`lab sync`, `lab check`, `lab commit`) rồi chuyển `spec-review <SPEC-ID>`.
+
+**Trần 2 vòng REVISE** (tới `**Spec version:** 3`). Review của bản thứ 3 vẫn chưa PASS → dừng, gửi gói quyết định: finding còn lại, vì sao hai vòng không đóng được, phương án đề xuất (sửa Design Record, tách story, chấp nhận rủi ro có ghi). Không chạy vòng thứ ba.
+
+### 5. Ticket nhỏ — không phải story/epic
+
+Việc lộ ra ngoài thư mục `stories/` đi qua skill **`capture`** — nó quyết định xếp vào ticket của spec có sẵn hay sinh ticket nhỏ `SETUP-/MAINT-/EXP-` (`<dir>/specs/<ID>/ticket.md` theo template `capture/SKILL.md` §2). to-spec không tự viết `ticket.md`; chỉ dẫn ID ticket nhỏ vào cột `Blocked by`. Gate không được miễn.
 
 ## Quy tắc nội dung — backend
 
@@ -166,15 +201,14 @@ Việc lộ ra ngoài `stories.md` thường đi qua skill **`capture`** trướ
 
 **Tickets**
 - Vertical slice, demo/verify được độc lập. Không chia "DB trước → API sau" nếu một slice end-to-end làm được.
-- Mỗi ticket: ID, outcome, scope, test, `Blocked by`, repo, non-goals.
-- ID dạng `<STORY-ID>-T<n>` (ví dụ `PLN-001-T1`). Không đánh số lại story.
+- Mỗi ticket: dòng trong bảng `## <n>. Tickets` + mục chi tiết (outcome, scope, test, `Blocked by`, repo, non-goals). ID và cột theo mục SPEC-ID và header. Không đánh số lại story.
 
 ## Quy tắc nội dung — frontend
 
 **UI surface**
 - Mỗi route khai báo search params kèm zod schema. Route tree nông — cấm nested tab.
 - Mỗi màn hình **bắt buộc** đủ 4 trạng thái: default / loading / empty / error. Thiếu trạng thái nào là spec chưa xong.
-- Primitive mới chỉ khi ≥2 nơi dùng thật. Component phức tạp cần thư viện → nêu chi phí bundle và hỏi user.
+- Primitive mới chỉ khi ≥2 nơi dùng thật. Component phức tạp cần thư viện → nêu chi phí bundle, đưa vào gói quyết định.
 - Cấm hex trực tiếp khi đã có token. Token chưa có giá trị → đánh dấu delta, không bịa.
 
 **Data fetching**
@@ -186,7 +220,7 @@ Việc lộ ra ngoài `stories.md` thường đi qua skill **`capture`** trướ
 **State ownership**
 - Phân loại **mọi** state của màn hình vào một trong bốn loại: server / url / auth / local. Không có state mồ côi.
 - Thứ tự ưu tiên: server → Query, filter/sort/page/selected id → search params, token → module-scope, còn lại → `useState`.
-- Context chỉ cho auth. Cấm tạo store. Cần store → dừng và hỏi user.
+- Context chỉ cho auth. Cấm tạo store. Cần store → dừng, đưa vào gói quyết định.
 
 **API client**
 - Mọi response parse qua zod trước khi vào component.
@@ -213,26 +247,30 @@ Việc lộ ra ngoài `stories.md` thường đi qua skill **`capture`** trướ
 
 **Story và ảnh review**
 - Mỗi màn hình phải có story phủ đủ 4 trạng thái. Trạng thái tái tạo bằng MSW handler, không bằng sửa code.
-- Ảnh review sinh bằng `npm run shots` → `.artifacts/shots/<storyId>-desktop.png` và `-mobile.png`.
+- Ảnh review sinh bằng `npm run shots` → `<storyId>-desktop.png` và `-mobile.png`, lưu làm bằng chứng ở `apps/lab-portal/docs/delivery/<TICKET-ID>/shots/` (documentation-standards §2 dòng 10).
 - Cấm dùng Playwright MCP để điều hướng Storybook.
 
 **Tickets**
 - Vertical slice: route + data + UI + test + story trong **một** ticket.
 - Cấm tách "dựng component trước, nối data sau" — nửa đầu không verify được gì.
-- Mỗi ticket: ID, outcome nhìn thấy được trên giao diện, scope, test, story phủ trạng thái nào, `Blocked by`, repo.
+- Mỗi ticket: dòng trong bảng `## <n>. Tickets` + mục chi tiết (outcome nhìn thấy được trên giao diện, scope, test, story phủ trạng thái nào, `Blocked by`, repo).
 
 ## Quy tắc chung
 
 **OPEN**
 - Giữ nguyên trạng thái gốc, không tự trả lời.
 - Mỗi OPEN ghi: câu hỏi, vì sao chặn, ai quyết, ảnh hưởng nếu sai.
+- OPEN chặn ticket → gom vào gói quyết định (`.agents/references/decision-packet.md`); OPEN không chặn để `spec-review` gom cùng gói duyệt spec.
+
+**Thao tác không hoàn tác được**
+- Spec mô tả merge `main`, migration D1 remote, deploy, secrets, rollback như **bước của `ship`**, mỗi lệnh đều hỏi user. to-spec không chạy lệnh nào trong số đó. Thao tác phá hủy (force push, xóa Worker, xóa D1) bị cấm và không xuất hiện trong spec.
 
 ## Checklist trước khi ghi
 
 ### Backend
 
 - [ ] Mọi AC của story ánh xạ tới ticket, hoặc ghi DEFERRED/OUT OF SCOPE kèm lý do.
-- [ ] Mọi ticket có `Blocked by` (hoặc `—`) và repo.
+- [ ] Mọi ticket có `Blocked by` (ticket ID, `SETUP-`/`MAINT-`/`EXP-` ID, hoặc `—`) và repo.
 - [ ] Không có công nghệ mới ngoài ledger DECIDED.
 - [ ] Không có AC copy nguyên văn.
 - [ ] Mọi bảng/cột được nhắc đều có trong `db-schema.md`, hoặc được đánh dấu rõ là delta cần bổ sung.
@@ -255,17 +293,23 @@ Việc lộ ra ngoài `stories.md` thường đi qua skill **`capture`** trướ
 ### Chung
 
 - [ ] OPEN phản ánh đúng trạng thái gốc.
+- [ ] Header có `**Status:** DRAFT`, `**Stories:**` đủ mọi story, `**Spec version:**`.
+- [ ] Ticket ID mang ID story con, không trùng spec khác; `lab sync` và `lab check` OK.
 - [ ] Spec dùng đúng template của nhánh, không trộn nội dung backend vào frontend.
 
-## Vị trí trong chuỗi
+## Đầu ra / bước tiếp theo
 
 ```text
 architecture-design → to-spec → spec-review → implement → ship
+                         ↑______REVISE______|  (NEEDS-WORK/BLOCK, tối đa 2 vòng)
 ```
 
-**Đầu ra tài liệu:** `specs/<ID>/spec-backend.md` (+ `spec-frontend.md`) đã user duyệt → **bước tiếp theo:** kiểm spec bám thiết kế → invoke `spec-review <ID>`
-
-**Điều kiện vào:** `lab gate to-spec <ID>` — yêu cầu story tồn tại + Design Record `Status: FROZEN`. Nếu FAIL, chạy `architecture-design` trước.
+| | |
+|---|---|
+| **Đầu vào** | ID story hoặc epic; `lab gate to-spec <ID>` PASS (story/epic tồn tại, Design Record FROZEN cùng `<dir>`) |
+| **Đầu ra** | `<dir>/specs/<SPEC-ID>/spec-backend.md` / `spec-frontend.md` với `**Status:** DRAFT`, `**Stories:**`, bảng `## <n>. Tickets`; `progress.md` sinh bởi `lab sync` |
+| **Kết thúc khi** | `lab sync <SPEC-ID>` và `lab check` OK, đã `lab commit <SPEC-ID> "..."` |
+| **Bước tiếp theo** | `spec-review <SPEC-ID>`; verdict NEEDS-WORK/BLOCK → quay lại bước REVISE |
 
 ## Anti-pattern
 
@@ -273,10 +317,12 @@ architecture-design → to-spec → spec-review → implement → ship
 - Spec dài hơn mức agent cần, hoặc mô tả code từng dòng.
 - Nâng OPEN thành DECIDED vì "nghe hợp lý".
 - Gộp nhiều outcome vào một ticket để giảm số ticket.
+- Ghi `**Status:** REVIEWED`, sửa `progress.md` hay `review.md` bằng tay.
+- Ghi điều kiện bằng chữ vào cột `Blocked by` thay vì tạo ticket `SETUP-`/`MAINT-`.
 - Dùng template backend để viết phần frontend hoặc ngược lại.
 
 **Backend**
-- Thêm KV/Queues/Durable Objects/Redis "cho tiện".
+- Thêm KV/Durable Objects/Redis "cho tiện", hoặc Queues khi Design Record không chọn.
 - Viết endpoint không có story.
 
 **Frontend**

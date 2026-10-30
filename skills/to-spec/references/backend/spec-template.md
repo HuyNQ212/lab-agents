@@ -5,14 +5,15 @@
 >
 > **Đọc kèm:** `references/frontend/spec-template.md` khi story cần cả hai phía. Đây là hai template **khác nhau**, không trộn.
 > Ràng buộc nền: `lab-docs/architecture/backend.md` §10.
+> Header và bảng Tickets là hợp đồng với `lab sync`/`lab gate` — giữ đúng chữ. Không thêm frontmatter. to-spec chỉ ghi `DRAFT`; `spec-review` đổi thành `REVIEWED` sau PASS + user duyệt.
 
-**Status:** DRAFT | REVIEWED
-**Stories:** <PLN-001, PLN-002>
+**Status:** DRAFT
+**Stories:** <mọi story spec phủ: PLN-001, PLN-002>
 **Services:** <`lab-planning` (owner)>
-**Nguồn:** <stories.md, db-schema.md, decision-ledger — ngày đọc>
+**Nguồn:** <stories/<ID>.md, db-schema.md, decision-ledger — ngày đọc>
 **Design Record:** <design-backend.md — FROZEN, kèm nhật ký delta đã đọc>
 **Truy vết:** mỗi bảng/cột/endpoint/binding/file trong spec ghi `Theo: <ID Design Record>` (OWN/INV/SYNC/FILE/D…). Phần tử không có ID để dẫn = quyết định thiết kế chưa có → dừng, quay `architecture-design`.
-**Spec version:** 1
+**Spec version:** 1 <!-- tăng 1 mỗi vòng REVISE, tối đa 3 -->
 
 ## 1. Scope
 
@@ -67,7 +68,10 @@ Rollback: forward-only — bù bằng migration mới.
 
 | ID | Outcome | Repo | Blocked by |
 |---|---|---|---|
-| <STORY-ID>-T1 | <...> | <...> | — |
+| <STORY-ID>-T1 | <...> | `services/<name>` | — |
+| <STORY-ID>-T2 | <...> | `services/<name>` | <STORY-ID>-T1, SETUP-<n> |
+
+ID mang story con mà ticket phục vụ (kể cả khi spec gộp epic). Cột Blocked by chỉ chứa ticket ID, `SETUP-`/`MAINT-`/`EXP-` ID, hoặc `—`; prerequisite thiếu → tạo ticket qua `capture`.
 
 ### <STORY-ID>-T1 — <tên>
 
@@ -101,3 +105,4 @@ Rollback: forward-only — bù bằng migration mới.
 - [ ] Không `SELECT *`, không `RETURNING`, không `prepare().bind().run()` trực tiếp.
 - [ ] Test integration dùng D1 thật; port external mock.
 - [ ] Không công nghệ mới ngoài ledger DECIDED.
+- [ ] `lab sync <SPEC-ID>` và `lab check` OK.

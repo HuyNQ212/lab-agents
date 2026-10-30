@@ -3,7 +3,7 @@
 > Đọc **trước** khi viết dòng CSS đầu tiên, và dùng lại ở bước tự phê.
 > Checklist này **viết lại cho Quiet Evergreen**, không chép từ skill bên ngoài.
 > Nguồn quyết định: `lab-docs/architecture/frontend.md` §2. Luật máy kiểm được ở
-> `.agents/scripts/lint-prototype.mjs` (L1–L7) — mục nào ghi **[máy]** là script chặn.
+> `.agents/scripts/lint-prototype.mjs` (L1–L9) — mục nào ghi **[máy]** là script chặn.
 
 ## Cách dùng
 
@@ -23,12 +23,14 @@ Lý do: gò mọi quan sát vào khuôn mã khiến reviewer bỏ qua lỗi th�
 |---|---|---|
 | A1 | Không emoji trong nội dung UI **[máy L1]** | Emoji render khác nhau theo OS; 🔔 từng được dùng làm nút thông báo và trông như mẫu AI |
 | A2 | Không `gradient()` **[máy L2]** | Quiet Evergreen là palette phẳng; gradient là dấu hiệu "dashboard AI" |
-| A3 | Màu chỉ từ `shared/tokens.css` **[máy L3]** | 5 badge pastel từng phá palette vì mỗi loại event một màu |
-| A4 | Không tài nguyên ngoài (CDN, font, ảnh remote) **[máy L4]** | Prototype phải mở offline được; cũng là điều kiện để `file://` từng hoạt động |
-| A5 | Link/script nội bộ resolve được **[máy L5]** | Đổi tên file làm chết nav mà không ai thấy |
+| A3 | Màu chỉ từ `shared/tokens.css` — hex, `rgb()`/`hsl()`, tên màu; trong `<style>`, `style=""`, file `.css`/`.js` và chuỗi gán vào `.style` **[máy L3]** | 5 badge pastel từng phá palette vì mỗi loại event một màu |
+| A4 | Không tài nguyên ngoài (CDN, font, ảnh remote, kể cả `//host/…`) **[máy L4]** | Prototype phải mở offline được; cũng là điều kiện để `file://` từng hoạt động |
+| A5 | Link/script nội bộ resolve được, đúng hoa/thường **[máy L5]** | Đổi tên file làm chết nav mà không ai thấy |
 | A6 | `[hidden]` thắng `display` **[máy L6]** | Pane ẩn bị `.list-pane { display: grid }` đè, hiện ra dù đã `hidden` |
 | A7 | Trang có shell đúng hợp đồng **[máy L7]** | `renderShell` cần `<main class="main">`, tokens, và lời gọi |
-| A8 | Hex trong `shared/shell.css` phải dùng token | Shell cũng phải tuân palette; kiểm bằng mắt diff |
+| A8 | `shared/shell.css` và `shared/shell.js` chỉ dùng token **[máy L3]** | Shell cũng phải tuân palette; hex được miễn chỉ khi khai trong `SHELL_HEX_ALLOW` của script (hiện rỗng) |
+| A9 | Mọi `workspace/*.html` có trong `shots.json` và README; dòng `**Approval:**` đúng dạng **[máy L8]** | Trang ngoài manifest bị `shots.mjs` bỏ qua im lặng, không ai review |
+| A10 | Mock không dùng ngày tuyệt đối (`new Date(2026, …)`) — tính từ `today` **[máy L9]** | Ngày cứng tự thành quá khứ, trang đã duyệt vi phạm B6/B18 theo thời gian |
 
 ## B. Mắt / ảnh kiểm được
 
