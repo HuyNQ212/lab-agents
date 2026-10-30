@@ -1,8 +1,8 @@
 ---
 name: to-spec
-description: Viết Technical Spec + ticket list cho một story hoặc epic Lab đã breakdown. Có hai nhánh riêng — backend (data model, API contract, service boundary, migration) và frontend (UI surface, data fetching, state ownership, form, test 3 tầng, story). Dùng khi user yêu cầu "spec", "technical spec", "viết spec cho PLN-001/SEC-1". Không dùng để viết lại stories/AC hay để code.
+description: "Viết Technical Spec + ticket list cho một story hoặc epic Lab đã breakdown. Có hai nhánh riêng — backend (data model, API contract, service boundary, migration) và frontend (UI surface, data fetching, state ownership, form, test 3 tầng, story). Dùng khi user yêu cầu \"spec\", \"technical spec\", \"viết spec cho PLN-001/SEC-1\". Không dùng để viết lại stories/AC hay để code."
 metadata:
-  short-description: Story → Technical Spec + tickets (backend hoặc frontend)
+  short-description: "Story → Technical Spec + tickets (backend hoặc frontend)"
 ---
 
 # to-spec — Story → Technical Spec

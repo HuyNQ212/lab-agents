@@ -1,8 +1,8 @@
 ---
 name: ship
-description: Đưa code đã implement trên nhánh feature lên production. Thay thế CI/CD vì Lab không có pipeline — chạy đủ gate (format, lint, typecheck, test, build), tạo PR multi-repo, merge bằng rebase kèm verify tree hash, migration D1, deploy Worker theo thứ tự binding, verify production. Dùng khi user nói "ship", "đưa lên production", "deploy". Không dùng để viết code hay chạy implement.
+description: "Đưa code đã implement trên nhánh feature lên production. Thay thế CI/CD vì Lab không có pipeline — chạy đủ gate (format, lint, typecheck, test, build), tạo PR multi-repo, merge bằng rebase kèm verify tree hash, migration D1, deploy Worker theo thứ tự binding, verify production. Dùng khi user nói \"ship\", \"đưa lên production\", \"deploy\". Không dùng để viết code hay chạy implement."
 metadata:
-  short-description: Nhánh feature → PR → merge → migration → deploy → verify
+  short-description: "Nhánh feature → PR → merge → migration → deploy → verify"
 ---
 
 # ship

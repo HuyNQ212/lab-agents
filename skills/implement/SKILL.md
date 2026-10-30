@@ -1,8 +1,8 @@
 ---
 name: implement
-description: Thực thi ticket list từ một spec đã duyệt thành code chạy được, đã test, đã review và đã commit trên nhánh riêng. Hai nhánh reference — backend (migration gate, D1, query cost, contract) và frontend (story, screenshot, đọc ảnh đối kháng). Dùng khi user nói "implement", "làm ticket", "code ticket PLN-001-T1". Không dùng để viết spec, để review code có sẵn, hay để deploy.
+description: "Thực thi ticket list từ một spec đã duyệt thành code chạy được, đã test, đã review và đã commit trên nhánh riêng. Hai nhánh reference — backend (migration gate, D1, query cost, contract) và frontend (story, screenshot, đọc ảnh đối kháng). Dùng khi user nói \"implement\", \"làm ticket\", \"code ticket PLN-001-T1\". Không dùng để viết spec, để review code có sẵn, hay để deploy."
 metadata:
-  short-description: Spec đã duyệt → code + test + review + commit trên nhánh
+  short-description: "Spec đã duyệt → code + test + review + commit trên nhánh"
 ---
 
 # implement

@@ -1,8 +1,8 @@
 ---
 name: architecture-design
-description: Ngồi cùng user chốt các quyết định cấu trúc khó đảo ngược — db schema, ranh giới service, data ownership, tách module/component FE, state ownership — trước khi viết spec. Hai nhánh (backend, frontend) và hai luồng (FULL cho một cụm story/epic, LITE cho story nằm gọn trong thiết kế đã có). Đi từng lớp, mỗi gate dừng chờ user; thiết kế ở mức đầy đủ rồi user gọt. Ra Design Record. Dùng khi user nói "design", "thiết kế schema", "tách module", "architecture design", hoặc khi to-spec dừng vì thiếu Design Record. Không viết spec, không viết code.
+description: "Ngồi cùng user chốt các quyết định cấu trúc khó đảo ngược — db schema, ranh giới service, data ownership, tách module/component FE, state ownership — trước khi viết spec. Hai nhánh (backend, frontend) và hai luồng (FULL cho một cụm story/epic, LITE cho story nằm gọn trong thiết kế đã có). Đi từng lớp, mỗi gate dừng chờ user; thiết kế ở mức đầy đủ rồi user gọt. Ra Design Record. Dùng khi user nói \"design\", \"thiết kế schema\", \"tách module\", \"architecture design\", hoặc khi to-spec dừng vì thiếu Design Record. Không viết spec, không viết code."
 metadata:
-  short-description: Cụm story → Design Record (từng lớp, user duyệt từng gate)
+  short-description: "Cụm story → Design Record (từng lớp, user duyệt từng gate)"
 ---
 
 # architecture-design — cùng user chốt thiết kế

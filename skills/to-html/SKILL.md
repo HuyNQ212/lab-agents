@@ -1,8 +1,8 @@
 ---
 name: to-html
-description: Chuyển nội dung (Markdown, stories, report, spec, breakdown) thành một trang HTML self-contained theo phong cách anthropics/html-effectiveness — palette ivory/clay/olive, serif header, không dependency, mở trực tiếp trong browser. Dùng khi user nói "to-html", "chuyển ra html", "xuất html", "render html", "tạo trang html".
+description: "Chuyển nội dung (Markdown, stories, report, spec, breakdown) thành một trang HTML self-contained theo phong cách anthropics/html-effectiveness — palette ivory/clay/olive, serif header, không dependency, mở trực tiếp trong browser. Dùng khi user nói \"to-html\", \"chuyển ra html\", \"xuất html\", \"render html\", \"tạo trang html\"."
 metadata:
-  short-description: Nội dung → standalone HTML theo style html-effectiveness
+  short-description: "Nội dung → standalone HTML theo style html-effectiveness"
 ---
 
 # to-html — Chuyển nội dung thành standalone HTML

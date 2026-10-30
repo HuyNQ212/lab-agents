@@ -1,8 +1,8 @@
 ---
 name: grilling
-description: Brainstorm từ ý tưởng thô tới Product Brief. Hai mode bên trong — EXPLORE (ý tưởng còn mơ hồ: unpack motivation, cách hiểu vấn đề) và GRILL (ý tưởng đã đánh giá được: hỏi decision frontier, bắt quyết định). Gate tự chuyển mode. Dùng khi user nói "brainstorm", "grill", "explore ý tưởng", "Brainstorm: [idea]". Kết thúc bằng Product Brief — không viết spec, không code.
+description: "Brainstorm từ ý tưởng thô tới Product Brief. Hai mode bên trong — EXPLORE (ý tưởng còn mơ hồ: unpack motivation, cách hiểu vấn đề) và GRILL (ý tưởng đã đánh giá được: hỏi decision frontier, bắt quyết định). Gate tự chuyển mode. Dùng khi user nói \"brainstorm\", \"grill\", \"explore ý tưởng\", \"Brainstorm: [idea]\". Kết thúc bằng Product Brief — không viết spec, không code."
 metadata:
-  short-description: Ý tưởng thô → EXPLORE/GRILL → Product Brief
+  short-description: "Ý tưởng thô → EXPLORE/GRILL → Product Brief"
 ---
 
 # grilling — Brainstorm tới Product Brief

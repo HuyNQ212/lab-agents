@@ -1,8 +1,8 @@
 ---
 name: capture
-description: Bắt và phân loại vấn đề lộ ra trong quá trình làm (lỗi, việc phát hiện thêm, việc nhỏ). Quyết định: xếp vào story sẵn có (dù nhỏ), hay sinh ticket nhỏ SETUP-/MAINT-/EXP-. Dùng khi user nói "ghi lại việc này", "có lỗi này", "phát hiện thêm", hoặc khi implement gặp việc ngoài ticket. Không dùng để viết spec đầy đủ, không dùng để sửa lỗi.
+description: "Bắt và phân loại vấn đề lộ ra trong quá trình làm (lỗi, việc phát hiện thêm, việc nhỏ). Quyết định: xếp vào story sẵn có (dù nhỏ), hay sinh ticket nhỏ SETUP-/MAINT-/EXP-. Dùng khi user nói \"ghi lại việc này\", \"có lỗi này\", \"phát hiện thêm\", hoặc khi implement gặp việc ngoài ticket. Không dùng để viết spec đầy đủ, không dùng để sửa lỗi."
 metadata:
-  short-description: Vấn đề lộ ra → story có sẵn hoặc ticket nhỏ mới
+  short-description: "Vấn đề lộ ra → story có sẵn hoặc ticket nhỏ mới"
 ---
 
 # capture — Bắt vấn đề lộ ra

@@ -75,6 +75,21 @@ personal-lab/
     └── lab-portal/
 ```
 
+## Cài harness Claude Code ở gốc workspace (bắt buộc)
+
+Gốc `personal-lab/` không có git, nên bản gốc của `CLAUDE.md` và `.claude/settings.json` nằm trong `.agents/workspace/`. Sau khi clone, và mỗi lần sửa hai file đó:
+
+```bash
+# Từ root workspace personal-lab/
+cp .agents/workspace/CLAUDE.md CLAUDE.md
+mkdir -p .claude && cp .agents/workspace/settings.json .claude/settings.json
+ln -s "$PWD/.agents/skills" .claude/skills   # nếu chưa có
+```
+
+- `CLAUDE.md` nạp `.agents/AGENTS.md` (Claude Code không tự nạp AGENTS.md khi đã có CLAUDE.md).
+- `settings.json` gồm: hook `skill-gate.mjs` (skill trong chuỗi phải có ID và qua `lab gate`), hook `bash-guard.mjs` (lệnh không hoàn tác được luôn hỏi user, lệnh phá hủy bị chặn), luật `permissions.ask/deny` tương ứng. Luật `ask`/`deny` vẫn có hiệu lực ở chế độ bypass permissions.
+- **Luôn mở phiên Claude Code tại `personal-lab/`.** Mở trong repo con thì settings này không được nạp.
+
 ## Wrangler & Cloudflare — quy ước per-service
 
 - **Wrangler là devDependency của từng service repo** (`npm i -D wrangler`), KHÔNG cài global. Mỗi repo pin version riêng để ai clone về đều có toolchain nhất quán.

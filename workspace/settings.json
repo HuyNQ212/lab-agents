@@ -1,0 +1,38 @@
+{
+  "permissions": {
+    "ask": [
+      "Bash(gh pr merge *)",
+      "Bash(npx wrangler deploy *)",
+      "Bash(npx wrangler versions deploy *)",
+      "Bash(npx wrangler rollback *)",
+      "Bash(npx wrangler d1 migrations apply *)",
+      "Bash(npx wrangler d1 execute *)",
+      "Bash(npx wrangler d1 time-travel restore *)",
+      "Bash(npx wrangler secret put *)",
+      "Bash(npx wrangler secret delete *)",
+      "Bash(npm run deploy *)"
+    ],
+    "deny": [
+      "Bash(git push --force *)",
+      "Bash(git push -f *)",
+      "Bash(npx wrangler delete *)",
+      "Bash(npx wrangler d1 delete *)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Skill",
+        "hooks": [
+          { "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/.agents/scripts/hooks/skill-gate.mjs\"" }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          { "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/.agents/scripts/hooks/bash-guard.mjs\"" }
+        ]
+      }
+    ]
+  }
+}

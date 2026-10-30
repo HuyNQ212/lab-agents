@@ -1,8 +1,8 @@
 ---
 name: spec-review
-description: Kiểm spec do to-spec viết có bám Design Record đã duyệt hay không, và quét lỗi thiết kế còn lại. Pass 1 — độ tuân thủ (schema lệch, vượt ranh giới service, workaround/giải pháp tricky không có trong thiết kế, nhồi một file, tách file/module sai, state ownership lệch). Pass 2 — checklist backend/frontend cho failure mode, AuthZ, contract, UX states, test seam. Chỉ báo điểm lệch, không bắt user đọc lại từng dòng spec. Dùng khi user nói "review spec", "spec-review", "kiểm spec", "review spec frontend". Không dùng để thiết kế (đó là architecture-design), không sửa spec, không review code đã viết.
+description: "Kiểm spec do to-spec viết có bám Design Record đã duyệt hay không, và quét lỗi thiết kế còn lại. Pass 1 — độ tuân thủ (schema lệch, vượt ranh giới service, workaround/giải pháp tricky không có trong thiết kế, nhồi một file, tách file/module sai, state ownership lệch). Pass 2 — checklist backend/frontend cho failure mode, AuthZ, contract, UX states, test seam. Chỉ báo điểm lệch, không bắt user đọc lại từng dòng spec. Dùng khi user nói \"review spec\", \"spec-review\", \"kiểm spec\", \"review spec frontend\". Không dùng để thiết kế (đó là architecture-design), không sửa spec, không review code đã viết."
 metadata:
-  short-description: Spec ↔ Design Record: báo điểm lệch + checklist
+  short-description: "Spec ↔ Design Record: báo điểm lệch + checklist"
 ---
 
 # spec-review

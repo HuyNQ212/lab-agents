@@ -1,8 +1,8 @@
 ---
 name: breakdown
-description: Phân rã Product Brief thành Epics/Stories/AC sau coverage audit. Sáu bước bắt buộc — DISCOVER EXISTING → COVERAGE AUDIT (bằng script, không audit tay) → SCOPE CONFIRMATION (checkpoint dừng bắt buộc) → BREAKDOWN DRAFT → USER REVIEW → PUBLISH. Dùng khi user nói "breakdown", "break ra story", "chia tickets". Không tự chạy sau khi grilling xong; không viết spec, không code.
+description: "Phân rã Product Brief thành Epics/Stories/AC sau coverage audit. Sáu bước bắt buộc — DISCOVER EXISTING → COVERAGE AUDIT (bằng script, không audit tay) → SCOPE CONFIRMATION (checkpoint dừng bắt buộc) → BREAKDOWN DRAFT → USER REVIEW → PUBLISH. Dùng khi user nói \"breakdown\", \"break ra story\", \"chia tickets\". Không tự chạy sau khi grilling xong; không viết spec, không code."
 metadata:
-  short-description: Product Brief → coverage audit → stories/AC
+  short-description: "Product Brief → coverage audit → stories/AC"
 ---
 
 # breakdown — Product Brief thành Stories

@@ -1,8 +1,8 @@
 ---
 name: prototype
-description: Tạo Interactive UX Prototype HTML/CSS/JS thuần trong lab-prototype trước khi breakdown/spec, để user duyệt giao diện và hành vi. Có vòng tự phê bằng ảnh chụp qua sub-agent (trần 3 vòng) và gate user duyệt. Dùng khi user nói "làm prototype", "dựng màn hình", "prototype cho Planning", "thử giao diện". Không dùng để code production React, không dùng để viết spec.
+description: "Tạo Interactive UX Prototype HTML/CSS/JS thuần trong lab-prototype trước khi breakdown/spec, để user duyệt giao diện và hành vi. Có vòng tự phê bằng ảnh chụp qua sub-agent (trần 3 vòng) và gate user duyệt. Dùng khi user nói \"làm prototype\", \"dựng màn hình\", \"prototype cho Planning\", \"thử giao diện\". Không dùng để code production React, không dùng để viết spec."
 metadata:
-  short-description: Prototype HTML-first → tự phê bằng ảnh → user duyệt
+  short-description: "Prototype HTML-first → tự phê bằng ảnh → user duyệt"
 ---
 
 # prototype — Dựng prototype, tự phê bằng ảnh, chờ user duyệt
