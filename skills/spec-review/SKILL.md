@@ -128,3 +128,13 @@ Yêu cầu mỗi finding: **vị trí cụ thể** (file + section) · **dẫn I
 - [ ] Mỗi finding có vị trí cụ thể + ID dẫn chiếu; mỗi BLOCKER dẫn quyết định FROZEN/ràng buộc DECIDED/hậu quả cụ thể.
 - [ ] Đúng checklist đúng nhánh; không finding nào chỉ dựa trên preference.
 - [ ] QUESTION không bị trả lời thay user; verdict khớp mức cao nhất.
+
+## Vị trí trong chuỗi
+
+```text
+to-spec → spec-review → implement → ship
+```
+
+**Đầu ra tài liệu:** `specs/<ID>/review.md` (`Verdict: PASS`) → **bước tiếp theo:** implement → invoke `implement <ticket-ID>`
+
+**Điều kiện vào:** `lab gate spec-review <ID>` — yêu cầu spec tồn tại + Design Record `Status: FROZEN`. Nếu FAIL, chạy `to-spec` trước.

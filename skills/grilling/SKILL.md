@@ -58,3 +58,13 @@ Khi đạt stop criteria (§6 framework): sinh `lab-docs/products/<name>/product
 - Không bỏ qua messy-idea note khi ý tưởng mơ hồ — ngay cả khi user muốn grill ngay: ghi note 5 phút trước, rồi mới grill.
 - Decision chỉ từ user; agent chỉ được PROPOSED.
 - Skill này đứng ngoài nhánh backend/frontend — chỉ khi vào `to-spec` mới tách nhánh.
+
+## Vị trí trong chuỗi
+
+```text
+grilling → breakdown → architecture-design → to-spec → spec-review → implement → ship
+```
+
+**Đầu ra tài liệu:** `lab-docs/products/<name>/product-brief.md` (`status: done`) → **bước tiếp theo:** phân rã thành stories → invoke `breakdown <product>`
+
+**Điều kiện vào:** không (điểm vào đầu tiên của chuỗi). Chỉ dừng khi đạt stop criteria của `lab-docs/frameworks/product-grilling.md` §6.

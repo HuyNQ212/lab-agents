@@ -270,6 +270,139 @@ function show(files, id) {
 
 // ---------- main ----------
 
+// ---------- gate: kiểm điều kiện vào skill ----------
+// Mỗi skill chỉ được chạy khi các tài liệu đầu vào tồn tại và đúng trạng thái.
+// Dùng: node .agents/scripts/lab.mjs gate <skill> <ID-or-prefix>
+
+const SKILL_CHAIN = ["grilling", "prototype", "breakdown", "architecture-design", "to-spec", "spec-review", "implement", "ship"];
+
+function findFilesByName(name) {
+  const out = [];
+  for (const f of walk(LAB_DOCS)) {
+    if (f.endsWith(name)) out.push(f);
+  }
+  return out;
+}
+
+function findByPrefix(prefix) {
+  const pu = prefix.toUpperCase();
+  return loadAll().filter(f => String(f.meta.id || "").toUpperCase().startsWith(pu));
+}
+
+function gateCheck(skill, id) {
+  const lines = [];
+  let ok = true;
+  const fail = (m) => { ok = false; lines.push("✗ " + m); };
+  const pass = (m) => lines.push("✓ " + m);
+
+  const prefix = (id || "").split("-")[0];
+
+  switch (skill) {
+    case "grilling": {
+      pass("grilling là điểm vào — không có điều kiện tiên quyết.");
+      break;
+    }
+    case "prototype": {
+      // tùy chọn: cần product-brief nếu có; không chặn cứng
+      pass("prototype tùy chọn; chạy được độc lập. Nếu đã có product-brief thì nên tham chiếu.");
+      break;
+    }
+    case "breakdown": {
+      const briefs = loadAll().filter(f => f.meta.type === "brief" && String(f.meta.id).toUpperCase().startsWith(prefix + "-BRIEF"));
+      if (!briefs.length) { fail(`chưa có Product Brief (${prefix}-BRIEF*) — chạy grilling trước`); break; }
+      const b = briefs.sort((a,b)=>String(b.meta["brief-version"]||b.meta.id).localeCompare(String(a.meta["brief-version"]||a.meta.id),undefined,{numeric:true}))[0];
+      if (b.meta.status !== "done") fail(`Product Brief ${b.meta.id} status="${b.meta.status}", cần done`);
+      else pass(`Product Brief ${b.meta.id} status=done`);
+      if (!/^## Capabilities\s*$/m.test(b.text)) fail(`Product Brief thiếu section "## Capabilities"`);
+      else pass("Product Brief có ## Capabilities");
+      break;
+    }
+    case "architecture-design": {
+      const stories = findByPrefix(prefix).filter(f => f.meta.type === "story" || f.meta.type === "epic");
+      if (!stories.length) { fail(`chưa có story nào prefix ${prefix} — chạy breakdown trước`); break; }
+      pass(`có ${stories.length} story/epic prefix ${prefix}`);
+      const briefs = loadAll().filter(f => f.meta.type === "brief" && String(f.meta.id).toUpperCase().startsWith(prefix + "-BRIEF"));
+      if (briefs.length) pass("có Product Brief");
+      else fail("thiếu Product Brief");
+      break;
+    }
+    case "to-spec": {
+      // cần story file
+      const story = loadAll().find(f => f.meta.id === id);
+      if (!story) fail(`không tìm thấy story ${id} — cần file stories/${id}.md`);
+      else pass(`story ${id} tồn tại (status=${story.meta.status})`);
+      // cần Design Record FROZEN
+      const prodDirs = new Set();
+      for (const f of findFilesByName("design-backend.md").concat(findFilesByName("design-frontend.md"))) {
+        const t = readFileSync(f, "utf8");
+        const fm = parseFrontmatter(t);
+        if (fm && fm.meta.status === "FROZEN") prodDirs.add(f);
+      }
+      // search design files in same product dir as story
+      let frozenFound = false;
+      for (const f of findFilesByName("design-backend.md").concat(findFilesByName("design-frontend.md"))) {
+        const t = readFileSync(f, "utf8");
+        if (/status:\s*FROZEN/.test(t)) { frozenFound = true; break; }
+      }
+      if (!frozenFound) fail("chưa có Design Record FROZEN (design-backend.md/design-frontend.md) — chạy architecture-design trước");
+      else pass("có Design Record FROZEN");
+      break;
+    }
+    case "spec-review": {
+      // cần spec file
+      const specFiles = findFilesByName("spec-backend.md").concat(findFilesByName("spec-frontend.md"))
+        .filter(f => f.includes(`/${id}/`) || f.includes(`\\${id}\\`));
+      if (!specFiles.length) fail(`chưa có spec cho ${id} (specs/${id}/spec-*.md) — chạy to-spec trước`);
+      else pass(`có spec: ${specFiles.map(f=>f.split(/[\\/]/).pop()).join(", ")}`);
+      // design frozen
+      let frozenFound = false;
+      for (const f of findFilesByName("design-backend.md").concat(findFilesByName("design-frontend.md"))) {
+        const t = readFileSync(f, "utf8");
+        if (/status:\s*FROZEN/.test(t)) { frozenFound = true; break; }
+      }
+      if (!frozenFound) fail("thiếu Design Record FROZEN");
+      else pass("có Design Record FROZEN");
+      break;
+    }
+    case "implement": {
+      const specFiles = findFilesByName("spec-backend.md").concat(findFilesByName("spec-frontend.md"))
+        .filter(f => f.includes(`/${id}/`) || f.includes(`\\${id}\\`));
+      if (!specFiles.length) fail(`chưa có spec cho ${id} — chạy to-spec trước`);
+      else pass("có spec");
+      const reviewFiles = findFilesByName("review.md").filter(f => f.includes(`/${id}/`) || f.includes(`\\${id}\\`));
+      if (!reviewFiles.length) fail(`chưa có review.md cho ${id} — chạy spec-review trước`);
+      else {
+        const t = readFileSync(reviewFiles[0], "utf8");
+        if (!/Verdict:\s*PASS/i.test(t)) fail(`review.md không có "Verdict: PASS" — sửa spec trước`);
+        else pass("review.md có Verdict: PASS");
+      }
+      break;
+    }
+    case "ship": {
+      const prefixU = (id || "").toUpperCase();
+      const items = loadAll().filter(f =>
+        (f.meta.type === "story" || f.meta.type === "ticket") &&
+        String(f.meta.id || "").toUpperCase().startsWith(prefixU)
+      );
+      if (items.length === 0) { fail(`không tìm thấy story/ticket prefix ${prefixU}`); break; }
+      const open = items.filter(f => f.meta.status !== "done" && f.meta.status !== "abandoned");
+      if (open.length) fail(`${open.length} story/ticket chưa done: ${open.map(f=>f.meta.id).join(", ")}`);
+      else pass(`tất cả ${items.length} story/ticket prefix ${prefixU} đã done`);
+      const plans = findFilesByName("ship-plan.md").filter(f => f.includes(`/${id}/`) || f.includes(`\\${id}\\`));
+      if (plans.length) pass(`ship-plan.md tồn tại`);
+      else pass("chưa có ship-plan.md — sẽ tạo ở Phase 0");
+      break;
+    }
+    default:
+      fail(`skill không rõ: ${skill}. Chuỗi: ${SKILL_CHAIN.join(" → ")}`);
+  }
+
+  console.log(`\n=== GATE ${skill.toUpperCase()} ${id || ""} ===`);
+  for (const l of lines) console.log(l);
+  console.log(ok ? "\n✓ PASS — được chạy skill này" : "\n✗ FAIL — chạy skill tiên quyết trước");
+  process.exit(ok ? 0 : 1);
+}
+
 const [cmd, ...args] = process.argv.slice(2);
 const files = loadAll();
 
@@ -363,7 +496,10 @@ switch (cmd) {
     console.log(allOk ? "\n✓ TẤT CẢ REPO ĐỦ GATE" : "\n✗ CÓ REPO LỖI — xem log ở trên");
     process.exit(allOk ? 0 : 1);
   }
-  default:
-    console.error(`Lệnh lạ "${cmd}". Có: status | check | tick <ID> <Tn> | untick <ID> <Tn> | done <ID> [--force] | show <ID> | coverage <PREFIX>`);
+  case "gate": {
+    if (!args[0]) { console.error("Dùng: lab gate <skill> <ID-or-prefix>"); process.exit(2); }
+    gateCheck(args[0], args[1]);
+    break;
+  }
     process.exit(2);
 }

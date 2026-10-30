@@ -127,6 +127,16 @@ Status trong file: `DRAFT` (đang đi gate) → `FROZEN` (user đóng băng ở 
 - Không nâng PROPOSED/OPEN/DEFERRED thành DECIDED.
 - Không đóng băng Design Record; không sửa phần đã FROZEN (sai thì quay lại gate, user chốt lại).
 - Không design từng story lẻ khi chúng thuộc một cụm cùng vùng.
+
+## Vị trí trong chuỗi
+
+```text
+breakdown → architecture-design → to-spec → spec-review → implement → ship
+```
+
+**Đầu ra tài liệu:** `design-backend.md` / `design-frontend.md` (`Status: FROZEN`) + `db-schema.md` → **bước tiếp theo:** viết spec → invoke `to-spec <story-ID>`
+
+**Điều kiện vào:** `lab gate architecture-design <prefix>` — yêu cầu có story/epic + Product Brief. Nếu FAIL, chạy `breakdown` trước.
 - Không tự đưa shared package, store toàn cục vào thiết kế như thể đã chốt. Hạ tầng DEFERRED (Queues, KV, DO, Redis, event bus) thì **được đề xuất** như phương án có đánh đổi; không được coi là đã chốt và không được loại chỉ vì DEFERRED.
 
 ## Checklist trước khi trình bày mỗi gate

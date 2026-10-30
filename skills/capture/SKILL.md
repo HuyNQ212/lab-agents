@@ -65,6 +65,10 @@ Mở file của story, thêm dòng vào khối `## Tasks` **giữ đúng format*
 4. Mọi ticket đều có ít nhất một task, mỗi task bắt đầu bằng `T<n>:`.
 5. Ghi xong phải chạy `lab check`; fail thì sửa trước khi báo user.
 
+## Vị trí trong chuỗi
+
+Skill ngang, không nằm trên chuỗi chính. Được gọi từ bất kỳ điểm nào khi có việc lộ ra ngoài ticket (lỗi, phát hiện thêm, việc nhỏ). Sau khi xếp xong (story có sẵn hoặc ticket nhỏ mới), tiếp tục chuỗi tại điểm vừa gọi.
+
 ## Không làm
 
 - Không sửa code (việc đó là `implement`).

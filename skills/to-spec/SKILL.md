@@ -257,6 +257,16 @@ Việc lộ ra ngoài `stories.md` thường đi qua skill **`capture`** trướ
 - [ ] OPEN phản ánh đúng trạng thái gốc.
 - [ ] Spec dùng đúng template của nhánh, không trộn nội dung backend vào frontend.
 
+## Vị trí trong chuỗi
+
+```text
+architecture-design → to-spec → spec-review → implement → ship
+```
+
+**Đầu ra tài liệu:** `specs/<ID>/spec-backend.md` (+ `spec-frontend.md`) đã user duyệt → **bước tiếp theo:** kiểm spec bám thiết kế → invoke `spec-review <ID>`
+
+**Điều kiện vào:** `lab gate to-spec <ID>` — yêu cầu story tồn tại + Design Record `Status: FROZEN`. Nếu FAIL, chạy `architecture-design` trước.
+
 ## Anti-pattern
 
 **Chung**

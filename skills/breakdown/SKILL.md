@@ -61,3 +61,13 @@ Theo framework §6: trình draft → chờ duyệt → ghi vào `lab-docs/produc
 - Không nâng OPEN/DEFERRED trong brief thành story.
 - Output tối đa là stories/AC (và tickets nếu được yêu cầu mức B) — không spec, không code.
 - Nếu audit phát hiện brief còn lỗ hổng requirement lớn → quay lại `grilling` đúng phần thiếu, không tự vá trong breakdown.
+
+## Vị trí trong chuỗi
+
+```text
+grilling → [prototype] → breakdown → architecture-design → to-spec → spec-review → implement → ship
+```
+
+**Đầu ra tài liệu:** `lab-docs/products/<product>/stories/<ID>.md` (+ `stories/<EPIC-ID>.md`) → **bước tiếp theo:** chốt thiết kế → invoke `architecture-design <cụm>`
+
+**Điều kiện vào:** `lab gate breakdown <prefix>` — yêu cầu Product Brief `status: done` + có section `## Capabilities`. Nếu FAIL, chạy `grilling` trước.

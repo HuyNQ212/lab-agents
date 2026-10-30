@@ -115,6 +115,16 @@ python -m http.server 4173 --bind 127.0.0.1
 
 Server cần thiết vì trang dùng `shared/`. Không phải build pipeline — vẫn là HTML/CSS/JS thuần mở bằng trình duyệt.
 
+## Vị trí trong chuỗi
+
+```text
+grilling → prototype → breakdown → architecture-design → to-spec → spec-review → implement → ship
+```
+
+**Đầu ra tài liệu:** `lab-prototype/workspace/<name>.html` + `lab-prototype/shots.json` (PUBLISHED sau khi user duyệt) → **bước tiếp theo:** phân rã stories → invoke `breakdown <product>`
+
+**Điều kiện vào:** có Product Brief (nếu có). Nếu chưa có brief, chạy `grilling` trước. Prototype là tùy chọn và không thay spec.
+
 MCP Playwright **được phép** dùng để smoke hành vi thật (bấm qua luồng), nhưng **không** dùng để chụp ảnh review — việc đó thuộc `shots.mjs`, tất định và không tốn token.
 
 ## Sai thường gặp

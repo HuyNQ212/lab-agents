@@ -103,3 +103,7 @@ Phong cách tham chiếu: repo `anthropics/html-effectiveness` (đã clone tại
 - Tạo file `.html` và báo đường dẫn clickable cho user.
 - Nếu user yêu cầu "render/preview", dùng Artifact tool (publish) sau khi viết file — theo contract artifact-design. Nếu chỉ muốn file local, không publish.
 - Không commit git trừ khi user yêu cầu.
+
+## Vị trí trong chuỗi
+
+Tiện ích trình bày, đứng ngoài chuỗi chính. Không tạo quyết định, không sửa tài liệu nguồn. Không có bước tiếp theo trong quy trình skill.

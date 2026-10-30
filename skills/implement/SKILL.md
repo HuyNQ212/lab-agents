@@ -163,3 +163,13 @@ Khi xong một ticket: `node .agents/scripts/lab.mjs tick <ID> <Tn>` (hoặc `do
 - Không commit khi gate đỏ.
 - Không tự quyết finding ESCALATE.
 - Không dùng Playwright MCP để điều hướng Storybook.
+
+## Vị trí trong chuỗi
+
+```text
+spec-review → implement → ship
+```
+
+**Đầu ra tài liệu:** commit trên nhánh feature (`feat/<ID>`) + bằng chứng tại `<repo>/docs/delivery/<ID>/` (gate output, review-triage, ảnh story) → **bước tiếp theo:** ship → invoke `ship <prefix>`
+
+**Điều kiện vào:** `lab gate implement <ID>` — yêu cầu spec đã duyệt + `review.md` có `Verdict: PASS`. Nếu FAIL, chạy `spec-review` trước.

@@ -219,3 +219,13 @@ Ba chỗ này không hoàn tác được. Không được tự vượt.
 - Không deploy song song nhiều Worker.
 - Không bỏ qua verify tree hash sau merge.
 - Không tự kết luận production "ổn" — đó là việc user smoke.
+
+## Vị trí trong chuỗi
+
+```text
+implement → ship → production
+```
+
+**Đầu ra tài liệu:** `specs/<ship-ID>/ship-plan.md` + `specs/<ship-ID>/execution-log.md` + production đang chạy → **bước tiếp theo:** hoàn thành (retro tuỳ chọn)
+
+**Điều kiện vào:** `lab gate ship <prefix>` — yêu cầu mọi story/ticket prefix đã `done`. Nếu FAIL, chạy `implement` cho từng ticket còn thiếu.
