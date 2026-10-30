@@ -4,6 +4,7 @@
 // Chạy từ workspace root: node .agents/scripts/lab.mjs <command> [args]
 
 import { readFileSync, writeFileSync, readdirSync, statSync } from "node:fs";
+import { execSync } from "node:child_process";
 import { dirname, join, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -311,6 +312,56 @@ switch (cmd) {
     const err = coverage(files, args[0]);
     if (err) { console.error(err); process.exit(2); }
     break;
+  }
+  case "all-gate": {
+    const repos = [];
+    for (const d of ["services", "apps"]) {
+      const base = join(ROOT, d);
+      if (!readdirSync(base, { withFileTypes: true })) continue;
+      for (const e of readdirSync(base, { withFileTypes: true })) {
+        if (!e.isDirectory()) continue;
+        const pkgPath = join(base, e.name, "package.json");
+        let hasPkg = false;
+        try { hasPkg = statSync(pkgPath).isFile(); } catch { hasPkg = false; }
+        if (hasPkg) repos.push(join(d, e.name));
+      }
+    }
+    repos.sort();
+    const cmds = [
+      ["npm", "run", "typecheck"],
+      ["npm", "run", "lint"],
+      ["npm", "test"],
+      ["npx", "tsx", "scripts/check-env.ts"],
+    ];
+    let allOk = true;
+    const results = [];
+    for (const repo of repos) {
+      const repoRoot = join(ROOT, repo);
+      console.log(`\n===== ${repo} =====`);
+      let repoOk = true;
+      for (const [cmd0, ...args0] of cmds) {
+        try {
+          execSync(`${cmd0} ${args0.join(" ")}`, {
+            cwd: repoRoot,
+            stdio: "inherit",
+            env: { ...process.env, CI: "true" },
+          });
+        } catch (e) {
+          repoOk = false;
+          allOk = false;
+        }
+      }
+      results.push([repo, repoOk ? "OK" : "LỖI"]);
+      console.log(repoOk ? `✓ ${repo} OK` : `✗ ${repo} LỖI`);
+    }
+    const w = [40, 10];
+    const line = (c) => c.map((s, i) => String(s).padEnd(w[i])).join(" | ");
+    console.log(`\n===== KẾT QUẢ TẤT CẢ REPO =====`);
+    console.log(line(["REPO", "KẾT QUẢ"]));
+    console.log(w.map(n => "-".repeat(n)).join("-+-"));
+    for (const [repo, ok] of results) console.log(line([repo, ok]));
+    console.log(allOk ? "\n✓ TẤT CẢ REPO ĐỦ GATE" : "\n✗ CÓ REPO LỖI — xem log ở trên");
+    process.exit(allOk ? 0 : 1);
   }
   default:
     console.error(`Lệnh lạ "${cmd}". Có: status | check | tick <ID> <Tn> | untick <ID> <Tn> | done <ID> [--force] | show <ID> | coverage <PREFIX>`);
